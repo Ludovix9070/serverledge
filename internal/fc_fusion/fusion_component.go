@@ -64,8 +64,8 @@ func SubmitFusionInfos(report *fc.CompositionExecutionReport, funComp *fc.Functi
 func fusionDecide(infos *fusionInfo) {
 	saveInfos(infos)
 	//Solo per Debug
-	fmt.Printf("DECIDE IF TO FUSE HERE WITH REPORT RESULT %v\n", infos.ExecReport.Result)
-	fmt.Printf("DECIDE IF TO FUSE FOR FC %s\n", infos.Composition.Name)
+	//fmt.Printf("DECIDE IF TO FUSE HERE WITH REPORT RESULT %v\n", infos.ExecReport.Result)
+	//fmt.Printf("DECIDE IF TO FUSE FOR FC %s\n", infos.Composition.Name)
 
 	//Dummy
 	condition := true //MUST be determined by an appropriate policy analyzing the report
