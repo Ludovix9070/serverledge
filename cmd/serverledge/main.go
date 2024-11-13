@@ -13,6 +13,7 @@ import (
 	"github.com/grussorusso/serverledge/internal/api"
 	"github.com/grussorusso/serverledge/internal/cache"
 	"github.com/grussorusso/serverledge/internal/config"
+	"github.com/grussorusso/serverledge/internal/fc_fusion"
 	"github.com/grussorusso/serverledge/internal/metrics"
 	"github.com/grussorusso/serverledge/internal/node"
 	"github.com/grussorusso/serverledge/internal/registration"
@@ -139,7 +140,9 @@ func main() {
 	api.RegisterTerminationHandler(registry, e)
 
 	schedulingPolicy := api.CreateSchedulingPolicy()
+	fusionPolicy := api.CreateFusionPolicy()
 	go scheduling.Run(schedulingPolicy)
+	go fc_fusion.Run(fusionPolicy)
 
 	if !isInCloud {
 		err = registration.InitEdgeMonitoring(registry)

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/grussorusso/serverledge/internal/fc"
+	"github.com/grussorusso/serverledge/internal/fc_fusion"
 	"github.com/grussorusso/serverledge/internal/function"
 )
 
@@ -39,4 +40,6 @@ func SubmitAsyncCompositionRequest(fcReq *fc.CompositionRequest) {
 	})
 	fcReq.ExecReport = executionReport
 	fcReq.ExecReport.ResponseTime = time.Now().Sub(fcReq.Arrival).Seconds()
+
+	fc_fusion.SubmitFusionInfos(&fcReq.ExecReport, fcReq.Fc)
 }

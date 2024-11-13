@@ -12,6 +12,7 @@ import (
 
 	"github.com/grussorusso/serverledge/internal/cache"
 	"github.com/grussorusso/serverledge/internal/config"
+	"github.com/grussorusso/serverledge/internal/fc_fusion"
 	"github.com/grussorusso/serverledge/internal/node"
 	"github.com/grussorusso/serverledge/internal/registration"
 	"github.com/grussorusso/serverledge/internal/scheduling"
@@ -110,4 +111,12 @@ func CreateSchedulingPolicy() scheduling.Policy {
 	} else { // default, localonly
 		return &scheduling.DefaultLocalPolicy{}
 	}
+}
+
+func CreateFusionPolicy() fc_fusion.FusionPolicy {
+	policyConf := config.GetString(config.FUSION_POLICY, "default")
+	log.Printf("Configured policy: %s\n", policyConf)
+
+	//per ora ho solo la default policy
+	return &fc_fusion.DefaultFusionPolicy{}
 }

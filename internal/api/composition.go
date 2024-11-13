@@ -13,6 +13,8 @@ import (
 	"github.com/grussorusso/serverledge/internal/client"
 	"github.com/grussorusso/serverledge/internal/container"
 	"github.com/grussorusso/serverledge/internal/fc"
+
+	"github.com/grussorusso/serverledge/internal/fc_fusion"
 	"github.com/grussorusso/serverledge/internal/fc_scheduling"
 	"github.com/grussorusso/serverledge/internal/function"
 	"github.com/grussorusso/serverledge/internal/node"
@@ -223,12 +225,22 @@ func InvokeFunctionComposition(e echo.Context) error {
 	}
 
 	if fcReq.Async {
+		//Informazioni per la fusione comunicate al componente all'interno
 		go fc_scheduling.SubmitAsyncCompositionRequest(fcReq)
 		return e.JSON(http.StatusOK, function.AsyncResponse{ReqId: fcReq.ReqId})
 	}
 
 	// sync execution
 	err = fc_scheduling.SubmitCompositionRequest(fcReq)
+	if err != nil {
+		return err
+	}
+
+	//Informazioni comunicate al componente di fusione
+	err = fc_fusion.SubmitFusionInfos(&fcReq.ExecReport, fcReq.Fc)
+	if err != nil {
+		return err
+	}
 
 	if errors.Is(err, node.OutOfResourcesErr) {
 		return e.String(http.StatusTooManyRequests, "")

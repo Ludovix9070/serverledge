@@ -42,6 +42,25 @@ func NewSimpleNode(f string) *SimpleNode {
 
 func (s *SimpleNode) Exec(compRequest *CompositionRequest, params ...map[string]interface{}) (map[string]interface{}, error) {
 	funct, ok := function.GetFunction(s.Func)
+
+	//solo per effettuare una fusione di prova
+	/*func1, error := extractTar([]byte(funct.TarFunctionCode))
+	if error != nil {
+		return nil, error
+	}
+	fmt.Printf("Contenuto Out Func1:\n%s\n", func1)
+	func2, error := extractTar([]byte(funct.TarFunctionCode))
+	if error != nil {
+		return nil, error
+	}
+	fmt.Printf("Contenuto Out Func2:\n%s\n", func2)
+
+	finalFunc, error := makeFusion(func1, func2)
+	if error != nil {
+		return nil, error
+	}
+	fmt.Printf("Contenuto Final Function:\n%s\n", finalFunc)*/
+
 	if !ok {
 		return nil, fmt.Errorf("SimpleNode.function is null: you must initialize SimpleNode's function to execute it")
 	}

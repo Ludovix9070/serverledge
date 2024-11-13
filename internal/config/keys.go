@@ -66,5 +66,8 @@ const METRICS_PROMETHEUS_PORT = "metrics.prometheus.port"
 // Possible values: "qosaware", "default", "cloudonly"
 const SCHEDULING_POLICY = "scheduler.policy"
 
+const FUSION_POLICY = "fusion.policy"
+const FUSION_QUEUE_CAPACITY = "fusion.queue.capacity"
+
 // Capacity of the queue (possibly) used by the scheduler
 const SCHEDULER_QUEUE_CAPACITY = "scheduler.queue.capacity"
