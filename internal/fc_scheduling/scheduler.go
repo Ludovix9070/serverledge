@@ -24,7 +24,7 @@ func SubmitCompositionRequest(fcReq *fc.CompositionRequest) error {
 func SubmitAsyncCompositionRequest(fcReq *fc.CompositionRequest) {
 	executionReport, errInvoke := fcReq.Fc.Invoke(fcReq)
 	if errInvoke != nil {
-		PublishAsyncCompositionResponse(fcReq.ReqId, fc.CompositionResponse{Success: false})
+		PublishAsyncCompositionResponse(fcReq.Id(), fc.CompositionResponse{Success: false})
 		return
 	}
 	reports := make(map[string]*function.ExecutionReport)
@@ -32,7 +32,7 @@ func SubmitAsyncCompositionRequest(fcReq *fc.CompositionRequest) {
 		reports[string(id)] = report
 		return true
 	})
-	PublishAsyncCompositionResponse(fcReq.ReqId, fc.CompositionResponse{
+	PublishAsyncCompositionResponse(fcReq.Id(), fc.CompositionResponse{
 		Success:      true,
 		Result:       fcReq.ExecReport.Result,
 		Reports:      reports,

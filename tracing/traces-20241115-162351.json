@@ -1,0 +1,109 @@
+[
+{
+	"Name": "invocation",
+	"SpanContext": {
+		"TraceID": "86f3c5652330450da2f9b51361c46595",
+		"SpanID": "b382813f4bd4cd09",
+		"TraceFlags": "01",
+		"TraceState": "",
+		"Remote": false
+	},
+	"Parent": {
+		"TraceID": "00000000000000000000000000000000",
+		"SpanID": "0000000000000000",
+		"TraceFlags": "00",
+		"TraceState": "",
+		"Remote": false
+	},
+	"SpanKind": 1,
+	"StartTime": "2024-11-15T16:25:30.717398369+01:00",
+	"EndTime": "2024-11-15T16:25:33.024305532+01:00",
+	"Attributes": [
+		{
+			"Key": "function",
+			"Value": {
+				"Type": "STRING",
+				"Value": "inc"
+			}
+		}
+	],
+	"Events": [
+		{
+			"Name": "Scheduling start",
+			"Attributes": null,
+			"DroppedAttributeCount": 0,
+			"Time": "2024-11-15T16:25:30.717425619+01:00"
+		},
+		{
+			"Name": "Container init start",
+			"Attributes": null,
+			"DroppedAttributeCount": 0,
+			"Time": "2024-11-15T16:25:30.717451797+01:00"
+		},
+		{
+			"Name": "Container initialized",
+			"Attributes": null,
+			"DroppedAttributeCount": 0,
+			"Time": "2024-11-15T16:25:31.460404061+01:00"
+		},
+		{
+			"Name": "Scheduling complete",
+			"Attributes": null,
+			"DroppedAttributeCount": 0,
+			"Time": "2024-11-15T16:25:31.460413035+01:00"
+		}
+	],
+	"Links": null,
+	"Status": {
+		"Code": "Unset",
+		"Description": ""
+	},
+	"DroppedAttributes": 0,
+	"DroppedEvents": 0,
+	"DroppedLinks": 0,
+	"ChildSpanCount": 0,
+	"Resource": [
+		{
+			"Key": "service.name",
+			"Value": {
+				"Type": "STRING",
+				"Value": "unknown_service:serverledge"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.language",
+			"Value": {
+				"Type": "STRING",
+				"Value": "go"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.name",
+			"Value": {
+				"Type": "STRING",
+				"Value": "opentelemetry"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.version",
+			"Value": {
+				"Type": "STRING",
+				"Value": "1.32.0"
+			}
+		}
+	],
+	"InstrumentationScope": {
+		"Name": "github.com/Ludovix9070/serverledge",
+		"Version": "",
+		"SchemaURL": "",
+		"Attributes": null
+	},
+	"InstrumentationLibrary": {
+		"Name": "github.com/Ludovix9070/serverledge",
+		"Version": "",
+		"SchemaURL": "",
+		"Attributes": null
+	}
+}
+
+]

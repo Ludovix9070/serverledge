@@ -1,0 +1,501 @@
+[
+{
+	"Name": "invocation",
+	"SpanContext": {
+		"TraceID": "ac70e2715a3f3c42ab0755111df703d7",
+		"SpanID": "911bde6fa34b724b",
+		"TraceFlags": "01",
+		"TraceState": "",
+		"Remote": false
+	},
+	"Parent": {
+		"TraceID": "ac70e2715a3f3c42ab0755111df703d7",
+		"SpanID": "e291ca8a490362a7",
+		"TraceFlags": "01",
+		"TraceState": "",
+		"Remote": false
+	},
+	"SpanKind": 1,
+	"StartTime": "2024-11-15T17:10:37.930003503+01:00",
+	"EndTime": "2024-11-15T17:10:40.296023469+01:00",
+	"Attributes": [
+		{
+			"Key": "function",
+			"Value": {
+				"Type": "STRING",
+				"Value": "inc"
+			}
+		}
+	],
+	"Events": [
+		{
+			"Name": "Scheduling start",
+			"Attributes": null,
+			"DroppedAttributeCount": 0,
+			"Time": "2024-11-15T17:10:37.930009783+01:00"
+		},
+		{
+			"Name": "Container init start",
+			"Attributes": null,
+			"DroppedAttributeCount": 0,
+			"Time": "2024-11-15T17:10:37.930050098+01:00"
+		},
+		{
+			"Name": "Container initialized",
+			"Attributes": null,
+			"DroppedAttributeCount": 0,
+			"Time": "2024-11-15T17:10:38.730268837+01:00"
+		},
+		{
+			"Name": "Scheduling complete",
+			"Attributes": null,
+			"DroppedAttributeCount": 0,
+			"Time": "2024-11-15T17:10:38.730280989+01:00"
+		}
+	],
+	"Links": null,
+	"Status": {
+		"Code": "Unset",
+		"Description": ""
+	},
+	"DroppedAttributes": 0,
+	"DroppedEvents": 0,
+	"DroppedLinks": 0,
+	"ChildSpanCount": 0,
+	"Resource": [
+		{
+			"Key": "service.name",
+			"Value": {
+				"Type": "STRING",
+				"Value": "unknown_service:serverledge"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.language",
+			"Value": {
+				"Type": "STRING",
+				"Value": "go"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.name",
+			"Value": {
+				"Type": "STRING",
+				"Value": "opentelemetry"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.version",
+			"Value": {
+				"Type": "STRING",
+				"Value": "1.32.0"
+			}
+		}
+	],
+	"InstrumentationScope": {
+		"Name": "github.com/Ludovix9070/serverledge",
+		"Version": "",
+		"SchemaURL": "",
+		"Attributes": null
+	},
+	"InstrumentationLibrary": {
+		"Name": "github.com/Ludovix9070/serverledge",
+		"Version": "",
+		"SchemaURL": "",
+		"Attributes": null
+	}
+}
+,
+{
+	"Name": "invocation",
+	"SpanContext": {
+		"TraceID": "ac70e2715a3f3c42ab0755111df703d7",
+		"SpanID": "a410bf8df9bd045f",
+		"TraceFlags": "01",
+		"TraceState": "",
+		"Remote": false
+	},
+	"Parent": {
+		"TraceID": "ac70e2715a3f3c42ab0755111df703d7",
+		"SpanID": "e291ca8a490362a7",
+		"TraceFlags": "01",
+		"TraceState": "",
+		"Remote": false
+	},
+	"SpanKind": 1,
+	"StartTime": "2024-11-15T17:10:40.298707691+01:00",
+	"EndTime": "2024-11-15T17:10:42.488646868+01:00",
+	"Attributes": [
+		{
+			"Key": "function",
+			"Value": {
+				"Type": "STRING",
+				"Value": "double"
+			}
+		}
+	],
+	"Events": [
+		{
+			"Name": "Scheduling start",
+			"Attributes": null,
+			"DroppedAttributeCount": 0,
+			"Time": "2024-11-15T17:10:40.298715555+01:00"
+		},
+		{
+			"Name": "Container init start",
+			"Attributes": null,
+			"DroppedAttributeCount": 0,
+			"Time": "2024-11-15T17:10:40.298744123+01:00"
+		},
+		{
+			"Name": "Container initialized",
+			"Attributes": null,
+			"DroppedAttributeCount": 0,
+			"Time": "2024-11-15T17:10:40.927715463+01:00"
+		},
+		{
+			"Name": "Scheduling complete",
+			"Attributes": null,
+			"DroppedAttributeCount": 0,
+			"Time": "2024-11-15T17:10:40.927734922+01:00"
+		}
+	],
+	"Links": null,
+	"Status": {
+		"Code": "Unset",
+		"Description": ""
+	},
+	"DroppedAttributes": 0,
+	"DroppedEvents": 0,
+	"DroppedLinks": 0,
+	"ChildSpanCount": 0,
+	"Resource": [
+		{
+			"Key": "service.name",
+			"Value": {
+				"Type": "STRING",
+				"Value": "unknown_service:serverledge"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.language",
+			"Value": {
+				"Type": "STRING",
+				"Value": "go"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.name",
+			"Value": {
+				"Type": "STRING",
+				"Value": "opentelemetry"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.version",
+			"Value": {
+				"Type": "STRING",
+				"Value": "1.32.0"
+			}
+		}
+	],
+	"InstrumentationScope": {
+		"Name": "github.com/Ludovix9070/serverledge",
+		"Version": "",
+		"SchemaURL": "",
+		"Attributes": null
+	},
+	"InstrumentationLibrary": {
+		"Name": "github.com/Ludovix9070/serverledge",
+		"Version": "",
+		"SchemaURL": "",
+		"Attributes": null
+	}
+}
+,
+{
+	"Name": "invocation",
+	"SpanContext": {
+		"TraceID": "ac70e2715a3f3c42ab0755111df703d7",
+		"SpanID": "d00fb80ef21ee7e2",
+		"TraceFlags": "01",
+		"TraceState": "",
+		"Remote": false
+	},
+	"Parent": {
+		"TraceID": "ac70e2715a3f3c42ab0755111df703d7",
+		"SpanID": "e291ca8a490362a7",
+		"TraceFlags": "01",
+		"TraceState": "",
+		"Remote": false
+	},
+	"SpanKind": 1,
+	"StartTime": "2024-11-15T17:10:42.488790094+01:00",
+	"EndTime": "2024-11-15T17:10:42.492721387+01:00",
+	"Attributes": [
+		{
+			"Key": "function",
+			"Value": {
+				"Type": "STRING",
+				"Value": "double"
+			}
+		}
+	],
+	"Events": [
+		{
+			"Name": "Scheduling start",
+			"Attributes": null,
+			"DroppedAttributeCount": 0,
+			"Time": "2024-11-15T17:10:42.488816613+01:00"
+		},
+		{
+			"Name": "Scheduling complete",
+			"Attributes": null,
+			"DroppedAttributeCount": 0,
+			"Time": "2024-11-15T17:10:42.489110658+01:00"
+		}
+	],
+	"Links": null,
+	"Status": {
+		"Code": "Unset",
+		"Description": ""
+	},
+	"DroppedAttributes": 0,
+	"DroppedEvents": 0,
+	"DroppedLinks": 0,
+	"ChildSpanCount": 0,
+	"Resource": [
+		{
+			"Key": "service.name",
+			"Value": {
+				"Type": "STRING",
+				"Value": "unknown_service:serverledge"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.language",
+			"Value": {
+				"Type": "STRING",
+				"Value": "go"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.name",
+			"Value": {
+				"Type": "STRING",
+				"Value": "opentelemetry"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.version",
+			"Value": {
+				"Type": "STRING",
+				"Value": "1.32.0"
+			}
+		}
+	],
+	"InstrumentationScope": {
+		"Name": "github.com/Ludovix9070/serverledge",
+		"Version": "",
+		"SchemaURL": "",
+		"Attributes": null
+	},
+	"InstrumentationLibrary": {
+		"Name": "github.com/Ludovix9070/serverledge",
+		"Version": "",
+		"SchemaURL": "",
+		"Attributes": null
+	}
+}
+,
+{
+	"Name": "invocation",
+	"SpanContext": {
+		"TraceID": "ac70e2715a3f3c42ab0755111df703d7",
+		"SpanID": "4799b823c37a02da",
+		"TraceFlags": "01",
+		"TraceState": "",
+		"Remote": false
+	},
+	"Parent": {
+		"TraceID": "ac70e2715a3f3c42ab0755111df703d7",
+		"SpanID": "e291ca8a490362a7",
+		"TraceFlags": "01",
+		"TraceState": "",
+		"Remote": false
+	},
+	"SpanKind": 1,
+	"StartTime": "2024-11-15T17:10:42.492786961+01:00",
+	"EndTime": "2024-11-15T17:10:42.500283664+01:00",
+	"Attributes": [
+		{
+			"Key": "function",
+			"Value": {
+				"Type": "STRING",
+				"Value": "inc"
+			}
+		}
+	],
+	"Events": [
+		{
+			"Name": "Scheduling start",
+			"Attributes": null,
+			"DroppedAttributeCount": 0,
+			"Time": "2024-11-15T17:10:42.49279374+01:00"
+		},
+		{
+			"Name": "Scheduling complete",
+			"Attributes": null,
+			"DroppedAttributeCount": 0,
+			"Time": "2024-11-15T17:10:42.492805054+01:00"
+		}
+	],
+	"Links": null,
+	"Status": {
+		"Code": "Unset",
+		"Description": ""
+	},
+	"DroppedAttributes": 0,
+	"DroppedEvents": 0,
+	"DroppedLinks": 0,
+	"ChildSpanCount": 0,
+	"Resource": [
+		{
+			"Key": "service.name",
+			"Value": {
+				"Type": "STRING",
+				"Value": "unknown_service:serverledge"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.language",
+			"Value": {
+				"Type": "STRING",
+				"Value": "go"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.name",
+			"Value": {
+				"Type": "STRING",
+				"Value": "opentelemetry"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.version",
+			"Value": {
+				"Type": "STRING",
+				"Value": "1.32.0"
+			}
+		}
+	],
+	"InstrumentationScope": {
+		"Name": "github.com/Ludovix9070/serverledge",
+		"Version": "",
+		"SchemaURL": "",
+		"Attributes": null
+	},
+	"InstrumentationLibrary": {
+		"Name": "github.com/Ludovix9070/serverledge",
+		"Version": "",
+		"SchemaURL": "",
+		"Attributes": null
+	}
+}
+,
+{
+	"Name": "fc_invocation",
+	"SpanContext": {
+		"TraceID": "ac70e2715a3f3c42ab0755111df703d7",
+		"SpanID": "e291ca8a490362a7",
+		"TraceFlags": "01",
+		"TraceState": "",
+		"Remote": false
+	},
+	"Parent": {
+		"TraceID": "00000000000000000000000000000000",
+		"SpanID": "0000000000000000",
+		"TraceFlags": "00",
+		"TraceState": "",
+		"Remote": false
+	},
+	"SpanKind": 1,
+	"StartTime": "2024-11-15T17:10:37.9253912+01:00",
+	"EndTime": "2024-11-15T17:10:42.586672401+01:00",
+	"Attributes": [
+		{
+			"Key": "function_composition",
+			"Value": {
+				"Type": "STRING",
+				"Value": "sequence_aslchoice"
+			}
+		}
+	],
+	"Events": [
+		{
+			"Name": "Save Pd and Progress on etcd start",
+			"Attributes": null,
+			"DroppedAttributeCount": 0,
+			"Time": "2024-11-15T17:10:42.500329674+01:00"
+		},
+		{
+			"Name": "Save Pd and Progress on etcd complete",
+			"Attributes": null,
+			"DroppedAttributeCount": 0,
+			"Time": "2024-11-15T17:10:42.559427726+01:00"
+		}
+	],
+	"Links": null,
+	"Status": {
+		"Code": "Unset",
+		"Description": ""
+	},
+	"DroppedAttributes": 0,
+	"DroppedEvents": 0,
+	"DroppedLinks": 0,
+	"ChildSpanCount": 4,
+	"Resource": [
+		{
+			"Key": "service.name",
+			"Value": {
+				"Type": "STRING",
+				"Value": "unknown_service:serverledge"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.language",
+			"Value": {
+				"Type": "STRING",
+				"Value": "go"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.name",
+			"Value": {
+				"Type": "STRING",
+				"Value": "opentelemetry"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.version",
+			"Value": {
+				"Type": "STRING",
+				"Value": "1.32.0"
+			}
+		}
+	],
+	"InstrumentationScope": {
+		"Name": "github.com/Ludovix9070/serverledge",
+		"Version": "",
+		"SchemaURL": "",
+		"Attributes": null
+	},
+	"InstrumentationLibrary": {
+		"Name": "github.com/Ludovix9070/serverledge",
+		"Version": "",
+		"SchemaURL": "",
+		"Attributes": null
+	}
+}
+
+]

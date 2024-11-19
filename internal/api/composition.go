@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -13,11 +14,14 @@ import (
 	"github.com/grussorusso/serverledge/internal/client"
 	"github.com/grussorusso/serverledge/internal/container"
 	"github.com/grussorusso/serverledge/internal/fc"
+	"github.com/grussorusso/serverledge/internal/telemetry"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/grussorusso/serverledge/internal/fc_fusion"
 	"github.com/grussorusso/serverledge/internal/fc_scheduling"
 	"github.com/grussorusso/serverledge/internal/function"
 	"github.com/grussorusso/serverledge/internal/node"
+	"github.com/grussorusso/serverledge/internal/scheduling"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 )
@@ -212,7 +216,9 @@ func InvokeFunctionComposition(e echo.Context) error {
 
 	fcReq.CanDoOffloading = fcInvocationRequest.CanDoOffloading
 	fcReq.Async = fcInvocationRequest.Async
-	fcReq.ReqId = fmt.Sprintf("%v-%s%d", funComp.Name, node.NodeIdentifier[len(node.NodeIdentifier)-5:], fcReq.Arrival.Nanosecond())
+	//fcReq.ReqId = fmt.Sprintf("%v-%s%d", funComp.Name, node.NodeIdentifier[len(node.NodeIdentifier)-5:], fcReq.Arrival.Nanosecond())
+	reqId := fmt.Sprintf("%v-%s%d", funComp.Name, node.NodeIdentifier[len(node.NodeIdentifier)-5:], fcReq.Arrival.Nanosecond())
+	fcReq.Ctx = context.WithValue(context.Background(), "ReqId", reqId)
 	// init fields if possibly not overwritten later
 	fcReq.ExecReport.Reports = hashmap.New[fc.ExecutionReportId, *function.ExecutionReport]() // make(map[fc.ExecutionReportId]*function.ExecutionReport)
 	for nodeId := range funComp.Workflow.Nodes {
@@ -224,10 +230,19 @@ func InvokeFunctionComposition(e echo.Context) error {
 		})
 	}
 
+	// Tracing
+	if telemetry.DefaultTracer != nil {
+		parentCtx, span := telemetry.DefaultTracer.Start(fcReq.Ctx, "fc_invocation")
+		fcReq.Ctx = parentCtx
+		scheduling.SetParentCtx(parentCtx)
+		span.SetAttributes(attribute.String("function_composition", fcReq.Fc.Name))
+		defer span.End()
+	}
+
 	if fcReq.Async {
 		//Informazioni per la fusione comunicate al componente all'interno
 		go fc_scheduling.SubmitAsyncCompositionRequest(fcReq)
-		return e.JSON(http.StatusOK, function.AsyncResponse{ReqId: fcReq.ReqId})
+		return e.JSON(http.StatusOK, function.AsyncResponse{ReqId: fcReq.Id()})
 	}
 
 	// sync execution

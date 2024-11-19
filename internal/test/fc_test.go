@@ -2,6 +2,7 @@ package test
 
 /// fc_test contains test that executes serverledge server-side function composition apis directly. Internally it uses __function__ REST API.
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -147,7 +148,10 @@ func TestInvokeFC(t *testing.T) {
 	params := make(map[string]interface{})
 	params[f.Signature.GetInputs()[0].Name] = 0
 
-	request := fc.NewCompositionRequest(shortuuid.New(), fcomp, params)
+	reqId := shortuuid.New()
+	ctx := context.WithValue(context.Background(), "ReqId", reqId)
+
+	request := fc.NewCompositionRequest(ctx, fcomp, params)
 
 	resultMap, err2 := fcomp.Invoke(request)
 	u.AssertNil(t, err2)
@@ -207,7 +211,9 @@ func TestInvokeChoiceFC(t *testing.T) {
 	params := make(map[string]interface{})
 	params[f.Signature.GetInputs()[0].Name] = input
 
-	request := fc.NewCompositionRequest(shortuuid.New(), fcomp, params)
+	reqId := shortuuid.New()
+	ctx := context.WithValue(context.Background(), "ReqId", reqId)
+	request := fc.NewCompositionRequest(ctx, fcomp, params)
 	resultMap, err2 := fcomp.Invoke(request)
 	u.AssertNil(t, err2)
 	// checking the result, should be input + 1
@@ -257,7 +263,9 @@ func TestInvokeFC_DifferentFunctions(t *testing.T) {
 	// INVOKE - we call the function composition
 	params := make(map[string]interface{})
 	params[fDouble.Signature.GetInputs()[0].Name] = 2
-	request := fc.NewCompositionRequest(shortuuid.New(), fcomp, params)
+	reqId := shortuuid.New()
+	ctx := context.WithValue(context.Background(), "ReqId", reqId)
+	request := fc.NewCompositionRequest(ctx, fcomp, params)
 	resultMap, err2 := fcomp.Invoke(request)
 	if err2 != nil {
 		log.Printf("%v\n", err2)
@@ -310,7 +318,9 @@ func TestInvokeFC_BroadcastFanOut(t *testing.T) {
 	// INVOKE - we call the function composition
 	params := make(map[string]interface{})
 	params[fDouble.Signature.GetInputs()[0].Name] = 1
-	request := fc.NewCompositionRequest(shortuuid.New(), fcomp, params)
+	reqId := shortuuid.New()
+	ctx := context.WithValue(context.Background(), "ReqId", reqId)
+	request := fc.NewCompositionRequest(ctx, fcomp, params)
 	resultMap, err2 := fcomp.Invoke(request)
 	u.AssertNil(t, err2)
 
@@ -369,7 +379,10 @@ func TestInvokeFC_Concurrent(t *testing.T) {
 			params := make(map[string]interface{})
 			params[f.Signature.GetInputs()[0].Name] = i
 
-			request := fc.NewCompositionRequest(fmt.Sprintf("goroutine_%d", i), fcomp, params)
+			reqId := fmt.Sprintf("goroutine_%d", i)
+			ctx := context.WithValue(context.Background(), "ReqId", reqId)
+
+			request := fc.NewCompositionRequest(ctx, fcomp, params)
 			// wait until all goroutines are ready
 			<-start
 			fmt.Printf("goroutine %d started invoking\n", i)
@@ -462,7 +475,9 @@ func TestInvokeFC_Complex_Concurrent(t *testing.T) {
 				outName = "Rows"
 			}
 
-			request := fc.NewCompositionRequest(fmt.Sprintf("goroutine_%d_branch_%s", i, goName), fcomp, params)
+			reqId := fmt.Sprintf("goroutine_%d_branch_%s", i, goName)
+			ctx := context.WithValue(context.Background(), "ReqId", reqId)
+			request := fc.NewCompositionRequest(ctx, fcomp, params)
 			// wait until all goroutines are ready
 			<-start
 			fmt.Printf("goroutine %d started invoking\n", i)
@@ -536,7 +551,10 @@ func TestInvokeFC_DifferentBranches(t *testing.T) {
 	// INVOKE - we call the function composition
 	params := make(map[string]interface{})
 	params[f.Signature.GetInputs()[0].Name] = 1
-	request := fc.NewCompositionRequest(shortuuid.New(), fcomp, params)
+
+	reqId := shortuuid.New()
+	ctx := context.WithValue(context.Background(), "ReqId", reqId)
+	request := fc.NewCompositionRequest(ctx, fcomp, params)
 	resultMap, err2 := fcomp.Invoke(request)
 	u.AssertNil(t, err2) // we should check that is a timeout error
 
@@ -583,7 +601,9 @@ func TestInvokeFC_ScatterFanOut(t *testing.T) {
 	// INVOKE - we call the function composition
 	params := make(map[string]interface{})
 	params[fDouble.Signature.GetInputs()[0].Name] = []int{1, 2, 3}
-	request := fc.NewCompositionRequest(shortuuid.New(), fcomp, params)
+	reqId := shortuuid.New()
+	ctx := context.WithValue(context.Background(), "ReqId", reqId)
+	request := fc.NewCompositionRequest(ctx, fcomp, params)
 	resultMap, err2 := fcomp.Invoke(request)
 	u.AssertNil(t, err2)
 
@@ -649,7 +669,9 @@ func TestInvokeSieveChoice(t *testing.T) {
 	params := make(map[string]interface{})
 	params[isPrimePy.Signature.GetInputs()[0].Name] = input
 
-	request := fc.NewCompositionRequest(shortuuid.New(), fcomp, params)
+	reqId := shortuuid.New()
+	ctx := context.WithValue(context.Background(), "ReqId", reqId)
+	request := fc.NewCompositionRequest(ctx, fcomp, params)
 	resultMap, err2 := fcomp.Invoke(request)
 	u.AssertNil(t, err2)
 
@@ -697,7 +719,9 @@ func TestInvokeCompositionError(t *testing.T) {
 	params := make(map[string]interface{})
 	params[incPy.Signature.GetInputs()[0].Name] = 1
 
-	request := fc.NewCompositionRequest(shortuuid.New(), fcomp, params)
+	reqId := shortuuid.New()
+	ctx := context.WithValue(context.Background(), "ReqId", reqId)
+	request := fc.NewCompositionRequest(ctx, fcomp, params)
 	_, err2 := fcomp.Invoke(request)
 	u.AssertNonNil(t, err2)
 
@@ -729,7 +753,9 @@ func TestInvokeCompositionFailAndSucceed(t *testing.T) {
 	params := make(map[string]interface{})
 	params["value"] = 1
 
-	request := fc.NewCompositionRequest(shortuuid.New(), fcomp, params)
+	reqId1 := shortuuid.New()
+	ctx1 := context.WithValue(context.Background(), "ReqId", reqId1)
+	request := fc.NewCompositionRequest(ctx1, fcomp, params)
 	resultMap, errInvoke1 := fcomp.Invoke(request)
 	u.AssertNilMsg(t, errInvoke1, "error while invoking the branch (succeed)")
 
@@ -741,7 +767,9 @@ func TestInvokeCompositionFailAndSucceed(t *testing.T) {
 	params2 := make(map[string]interface{})
 	params2["value"] = 2
 
-	request2 := fc.NewCompositionRequest(shortuuid.New(), fcomp, params2)
+	reqId2 := shortuuid.New()
+	ctx2 := context.WithValue(context.Background(), "ReqId", reqId2)
+	request2 := fc.NewCompositionRequest(ctx2, fcomp, params2)
 	resultMap2, errInvoke2 := fcomp.Invoke(request2)
 	u.AssertNilMsg(t, errInvoke2, "error while invoking the branch (fail)")
 
@@ -777,7 +805,9 @@ func TestInvokeCompositionPassDoNothing(t *testing.T) {
 	params := make(map[string]interface{})
 	params["input"] = 1
 
-	request := fc.NewCompositionRequest(shortuuid.New(), fcomp, params)
+	reqId := shortuuid.New()
+	ctx := context.WithValue(context.Background(), "ReqId", reqId)
+	request := fc.NewCompositionRequest(ctx, fcomp, params)
 	resultMap, errInvoke1 := fcomp.Invoke(request)
 	u.AssertNilMsg(t, errInvoke1, "error while invoking the composition with pass node")
 
@@ -810,7 +840,9 @@ func TestInvokeCompositionWait(t *testing.T) {
 	params := make(map[string]interface{})
 	params["input"] = 1
 
-	request := fc.NewCompositionRequest(shortuuid.New(), fcomp, params)
+	reqId := shortuuid.New()
+	ctx := context.WithValue(context.Background(), "ReqId", reqId)
+	request := fc.NewCompositionRequest(ctx, fcomp, params)
 	resultMap, errInvoke1 := fcomp.Invoke(request)
 	u.AssertNilMsg(t, errInvoke1, "error while invoking the composition with pass node")
 

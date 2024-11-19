@@ -71,3 +71,7 @@ const FUSION_QUEUE_CAPACITY = "fusion.queue.capacity"
 
 // Capacity of the queue (possibly) used by the scheduler
 const SCHEDULER_QUEUE_CAPACITY = "scheduler.queue.capacity"
+
+const TRACING_ENABLED = "tracing.enabled"
+
+const TRACING_OUTFILE = "tracing.outfile"

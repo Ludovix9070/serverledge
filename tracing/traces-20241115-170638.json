@@ -1,0 +1,97 @@
+[
+{
+	"Name": "fc_invocation",
+	"SpanContext": {
+		"TraceID": "12d123ad6afef30fac56b9e2393ee344",
+		"SpanID": "3800749f24648808",
+		"TraceFlags": "01",
+		"TraceState": "",
+		"Remote": false
+	},
+	"Parent": {
+		"TraceID": "00000000000000000000000000000000",
+		"SpanID": "0000000000000000",
+		"TraceFlags": "00",
+		"TraceState": "",
+		"Remote": false
+	},
+	"SpanKind": 1,
+	"StartTime": "2024-11-15T17:06:54.70481512+01:00",
+	"EndTime": "2024-11-15T17:06:59.139519305+01:00",
+	"Attributes": [
+		{
+			"Key": "function_composition",
+			"Value": {
+				"Type": "STRING",
+				"Value": "sequence_aslchoice"
+			}
+		}
+	],
+	"Events": [
+		{
+			"Name": "Save Pd and Progress on etcd start",
+			"Attributes": null,
+			"DroppedAttributeCount": 0,
+			"Time": "2024-11-15T17:06:59.114563962+01:00"
+		},
+		{
+			"Name": "Save Pd and Progress on etcd complete",
+			"Attributes": null,
+			"DroppedAttributeCount": 0,
+			"Time": "2024-11-15T17:06:59.125396984+01:00"
+		}
+	],
+	"Links": null,
+	"Status": {
+		"Code": "Unset",
+		"Description": ""
+	},
+	"DroppedAttributes": 0,
+	"DroppedEvents": 0,
+	"DroppedLinks": 0,
+	"ChildSpanCount": 0,
+	"Resource": [
+		{
+			"Key": "service.name",
+			"Value": {
+				"Type": "STRING",
+				"Value": "unknown_service:serverledge"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.language",
+			"Value": {
+				"Type": "STRING",
+				"Value": "go"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.name",
+			"Value": {
+				"Type": "STRING",
+				"Value": "opentelemetry"
+			}
+		},
+		{
+			"Key": "telemetry.sdk.version",
+			"Value": {
+				"Type": "STRING",
+				"Value": "1.32.0"
+			}
+		}
+	],
+	"InstrumentationScope": {
+		"Name": "github.com/Ludovix9070/serverledge",
+		"Version": "",
+		"SchemaURL": "",
+		"Attributes": null
+	},
+	"InstrumentationLibrary": {
+		"Name": "github.com/Ludovix9070/serverledge",
+		"Version": "",
+		"SchemaURL": "",
+		"Attributes": null
+	}
+}
+
+]

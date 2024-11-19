@@ -1,6 +1,7 @@
 package fc
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -43,8 +44,8 @@ func NewSimpleNode(f string) *SimpleNode {
 func (s *SimpleNode) Exec(compRequest *CompositionRequest, params ...map[string]interface{}) (map[string]interface{}, error) {
 	funct, ok := function.GetFunction(s.Func)
 
-	//solo per effettuare una fusione di prova
-	/*func1, error := extractTar([]byte(funct.TarFunctionCode))
+	/*//solo per effettuare una fusione di prova
+	func1, error := extractTar([]byte(funct.TarFunctionCode))
 	if error != nil {
 		return nil, error
 	}
@@ -78,9 +79,10 @@ func (s *SimpleNode) Exec(compRequest *CompositionRequest, params ...map[string]
 	// the rest of the code is similar to a single function execution
 	now := time.Now()
 	requestId := fmt.Sprintf("%s-%s%d", s.Func, node.NodeIdentifier[len(node.NodeIdentifier)-5:], now.Nanosecond())
+	ctx := context.WithValue(context.Background(), "ReqId", requestId)
 	s.inputMutex.Lock()
 	r := &function.Request{
-		ReqId:   requestId,
+		Ctx:     ctx,
 		Fun:     funct,
 		Params:  params[0],
 		Arrival: now,

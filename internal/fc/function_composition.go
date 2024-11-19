@@ -10,9 +10,11 @@ import (
 	"github.com/cornelk/hashmap"
 	"github.com/grussorusso/serverledge/internal/cache"
 	"github.com/grussorusso/serverledge/internal/function"
+	"github.com/grussorusso/serverledge/internal/telemetry"
 	"github.com/grussorusso/serverledge/internal/types"
 	"github.com/grussorusso/serverledge/utils"
 	"github.com/labstack/gommon/log"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/exp/slices"
 )
 
@@ -202,7 +204,7 @@ func (fc *FunctionComposition) SaveToEtcd() error {
 func (fc *FunctionComposition) Invoke(r *CompositionRequest) (CompositionExecutionReport, error) {
 
 	var err error
-	requestId := ReqId(r.ReqId)
+	requestId := ReqId(r.Id())
 	input := r.Params
 	// initialize struct progress from dag
 	progress := InitProgressRecursive(requestId, &fc.Workflow)
@@ -222,6 +224,9 @@ func (fc *FunctionComposition) Invoke(r *CompositionRequest) (CompositionExecuti
 	}
 
 	if !shouldContinue {
+		if telemetry.DefaultTracer != nil {
+			trace.SpanFromContext(r.Ctx).AddEvent("Save Pd and Progress on etcd start")
+		}
 		// saving partialData and progress on etcd - implementing workflow offloading policies
 		err := savePartialDataToEtcd(pd)
 		if err != nil {
@@ -230,6 +235,10 @@ func (fc *FunctionComposition) Invoke(r *CompositionRequest) (CompositionExecuti
 		err = saveProgressToEtcd(progress)
 		if err != nil {
 			return CompositionExecutionReport{}, err
+		}
+
+		if telemetry.DefaultTracer != nil {
+			trace.SpanFromContext(r.Ctx).AddEvent("Save Pd and Progress on etcd complete")
 		}
 	}
 

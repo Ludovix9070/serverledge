@@ -233,7 +233,7 @@ func (dag *Dag) executeSimple(progress *Progress, partialData *PartialData, simp
 	// retrieving input
 	var pd *PartialData
 	nodeId := simpleNode.GetId()
-	requestId := ReqId(r.ReqId)
+	requestId := ReqId(r.Id())
 	pd = NewPartialData(requestId, "", nodeId, nil) // partial initialization of pd
 
 	err := simpleNode.CheckInput(partialData.Data)
@@ -275,7 +275,7 @@ func (dag *Dag) executeChoice(progress *Progress, partialData *PartialData, choi
 
 	var pd *PartialData
 	nodeId := choice.GetId()
-	requestId := ReqId(r.ReqId)
+	requestId := ReqId(r.Id())
 	pd = NewPartialData(requestId, "", nodeId, nil) // partial initialization of pd
 
 	err := choice.CheckInput(partialData.Data)
@@ -317,7 +317,7 @@ func (dag *Dag) executeFanOut(progress *Progress, partialData *PartialData, fanO
 	var pd *PartialData
 	outputMap := make(map[string]interface{})
 	nodeId := fanOut.GetId()
-	requestId := ReqId(r.ReqId)
+	requestId := ReqId(r.Id())
 
 	/* using forNode = "" in order to create a special partialData to handle fanout
 	 * case with Data field which contains a map[string]interface{} with the key set
@@ -373,7 +373,7 @@ func (dag *Dag) executeParallel(progress *Progress, partialData *PartialData, ne
 	inputs := make([]map[string]interface{}, 0)
 	outputChannels := make([]chan map[string]interface{}, 0)
 	errorChannels := make([]chan error, 0)
-	requestId := ReqId(r.ReqId)
+	requestId := ReqId(r.Id())
 	outputMap := make(map[string]interface{}, 0)
 	var node DagNode
 	pd := NewPartialData(requestId, "", "", nil) // partial initialization of pd
@@ -462,7 +462,7 @@ func (dag *Dag) executeParallel(progress *Progress, partialData *PartialData, ne
 
 func (dag *Dag) executeFanIn(progress *Progress, partialData *PartialData, fanIn *FanInNode, r *CompositionRequest) (*PartialData, *Progress, bool, error) {
 	nodeId := fanIn.GetId()
-	requestId := ReqId(r.ReqId)
+	requestId := ReqId(r.Id())
 	var err error
 	pd := NewPartialData(requestId, "", nodeId, nil) // partial initialization of pd
 
@@ -523,7 +523,7 @@ func (dag *Dag) executeFailNode(progress *Progress, partialData *PartialData, fa
 func commonExec(dag *Dag, progress *Progress, partialData *PartialData, node DagNode, r *CompositionRequest) (*PartialData, *Progress, bool, error) {
 	var pd *PartialData
 	nodeId := node.GetId()
-	requestId := ReqId(r.ReqId)
+	requestId := ReqId(r.Id())
 	pd = NewPartialData(requestId, "", nodeId, nil) // partial initialization of pd
 
 	err := node.CheckInput(partialData.Data)
@@ -820,9 +820,9 @@ func (dag *Dag) IsEmpty() bool {
 
 // Debug can be used to find if expected output of test TestInvokeFC_Concurrent is correct based on requestId of format "goroutine_#" and simple node ids of format "simple #"
 func Debug(r *CompositionRequest, nodeId string, output map[string]interface{}) error {
-	if strings.Contains(r.ReqId, "goroutine") {
+	if strings.Contains(r.Id(), "goroutine") {
 		// getting number of goroutine, to get the starting input of the sequence
-		startingInput := strings.Split(r.ReqId, "_")[1]
+		startingInput := strings.Split(r.Id(), "_")[1]
 		atoi, errAtoi1 := strconv.Atoi(startingInput)
 		if errAtoi1 != nil {
 			return errAtoi1

@@ -1,6 +1,8 @@
 package fc
 
 import (
+	"context"
+	"fmt"
 	"time"
 
 	"github.com/cornelk/hashmap"
@@ -11,7 +13,7 @@ type ReqId string
 
 // CompositionRequest represents a single function composition internal invocation, with params and metrics data
 type CompositionRequest struct {
-	ReqId           string
+	Ctx             context.Context
 	Fc              *FunctionComposition
 	Params          map[string]interface{}
 	Arrival         time.Time
@@ -21,9 +23,9 @@ type CompositionRequest struct {
 	Async           bool
 }
 
-func NewCompositionRequest(reqId string, composition *FunctionComposition, params map[string]interface{}) *CompositionRequest {
+func NewCompositionRequest(ctx context.Context, composition *FunctionComposition, params map[string]interface{}) *CompositionRequest {
 	return &CompositionRequest{
-		ReqId:   reqId,
+		Ctx:     ctx,
 		Fc:      composition,
 		Params:  params,
 		Arrival: time.Now(),
@@ -34,6 +36,14 @@ func NewCompositionRequest(reqId string, composition *FunctionComposition, param
 		CanDoOffloading: true,
 		Async:           false,
 	}
+}
+
+func (r *CompositionRequest) Id() string {
+	return r.Ctx.Value("ReqId").(string)
+}
+
+func (r *CompositionRequest) String() string {
+	return fmt.Sprintf("[%s] Rq-%s", r.Fc.Name, r.Id())
 }
 
 type CompositionResponse struct {
