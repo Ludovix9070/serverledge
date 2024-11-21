@@ -1,6 +1,6 @@
 //api.port: 1323
-//etcd.address: 192.168.1.9:2379
-//cloud.server.url: "http://192.168.1.9:1324"
+//etcd.address: 192.168.1.2:2379
+//cloud.server.url: "http://192.168.1.2:1324"
  
 //offloading: true
 scheduler.policy: default
@@ -9,5 +9,6 @@ scheduler.policy: default
 //container.pool.cpus: 1
 //scheduler.queue.capacity: 0
  
-tracing.enabled: true
+tracing.enabled: false
+metrics.enabled: true
 #tracing.outfile: ./tracing/tracing.json

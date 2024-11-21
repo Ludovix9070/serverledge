@@ -4,18 +4,18 @@ import (
 	"fmt"
 	"log"
 	"runtime"
+	"time"
 
 	"github.com/grussorusso/serverledge/internal/config"
-	"github.com/grussorusso/serverledge/internal/fc"
 	"github.com/grussorusso/serverledge/internal/node"
 )
 
-var infos chan *fusionInfo
-var executionInfo map[string][]fc.CompositionExecutionReport
+var metricInfos chan ReturnedOutputData
+var dataMap map[time.Time]ReturnedOutputData
 
 func Run(p FusionPolicy) {
-	infos = make(chan *fusionInfo, 500)
-	executionInfo = make(map[string][]fc.CompositionExecutionReport)
+	metricInfos = make(chan ReturnedOutputData, 500)
+	dataMap = make(map[time.Time]ReturnedOutputData)
 
 	// initialize Resources
 	//forse info saranno utili nel corso della vita del componente di fusione
@@ -29,76 +29,34 @@ func Run(p FusionPolicy) {
 	p.Init()
 	log.Println("Fusion Component started.")
 
-	var f *fusionInfo
+	var r ReturnedOutputData
 	for {
 		select {
-		case f = <-infos: // receive composition infos
-			go p.OnArrival(f)
+		case r = <-metricInfos: // receive composition infos
+			go p.OnArrival(r)
 		}
 	}
 
 }
 
-// SubmitFusionInfo gets composition execution informations to evaluate fusion
-func SubmitFusionInfos(report *fc.CompositionExecutionReport, funComp *fc.FunctionComposition) error {
-	fusionInfo := fusionInfo{
-		ExecReport:      report,
-		Composition:     funComp,
-		decisionChannel: make(chan fusionDecision, 1)}
-	infos <- &fusionInfo // send infos
-
-	fusionDecision, ok := <-fusionInfo.decisionChannel
-	if !ok {
-		return fmt.Errorf("could not get the fusion decision")
-	}
-
-	if fusionDecision.action == EVALUATE_FUSION {
-		//Solo per Debug
-		fmt.Println("MAKE FUSION HERE, CALL funcs in fusion.go")
-		//qui devo effettuare la fusione del dag
-	}
+func SubmitInfos(data ReturnedOutputData) error {
+	metricInfos <- data // send infos
 
 	return nil
 }
 
-func fusionDecide(infos *fusionInfo) {
-	saveInfos(infos)
-	//Solo per Debug
-	//fmt.Printf("DECIDE IF TO FUSE HERE WITH REPORT RESULT %v\n", infos.ExecReport.Result)
-	//fmt.Printf("DECIDE IF TO FUSE FOR FC %s\n", infos.Composition.Name)
-
+func fusionDecide(infos ReturnedOutputData) {
+	//saveInfos
+	dataMap[infos.Timestamp] = infos
 	//Dummy
 	condition := true //MUST be determined by an appropriate policy analyzing the report
 	if condition {
-		decision := fusionDecision{action: EVALUATE_FUSION}
-		infos.decisionChannel <- decision
+		fmt.Println("Data Map:")
+		for key := range dataMap {
+			fmt.Println("Timestamp Key: ", key)
+			fmt.Println("  Datas: ", dataMap[key])
+		}
 	} else {
-		decision := fusionDecision{action: NOOP}
-		infos.decisionChannel <- decision
-	}
-
-}
-
-func saveInfos(infos *fusionInfo) {
-	// Funzione per aggiungere un report alla mappa
-	addReport := func(key string, report fc.CompositionExecutionReport) {
-		// Controlla se la chiave è già presente nella mappa
-		if _, exists := executionInfo[key]; exists {
-			// Se esiste, fai l'append dell'elemento alla slice esistente
-			executionInfo[key] = append(executionInfo[key], report)
-		} else {
-			// Se non esiste, crea una nuova slice e aggiungi l'elemento
-			executionInfo[key] = []fc.CompositionExecutionReport{report}
-		}
-	}
-	addReport(infos.Composition.Name, *infos.ExecReport)
-
-	// Solo per Debug
-	fmt.Println("Execution Info Map (only Result Field):")
-	for key, reports := range executionInfo {
-		fmt.Printf("Key: %s\n", key)
-		for _, report := range reports {
-			fmt.Printf("  Result: %v\n", report.Result)
-		}
+		fmt.Println("DON'T FUSE HERE with total dataMap: ", dataMap)
 	}
 }

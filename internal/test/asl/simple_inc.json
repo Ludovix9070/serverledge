@@ -5,19 +5,19 @@
       "FirstState": {
         "Comment": "The first task",
         "Type": "Task",
-        "Resource": "hello",
+        "Resource": "inc",
         "Next": "SecondState"
       },
       "SecondState": {
         "Comment": "The second task",
         "Type": "Task",
-        "Resource": "hello",
+        "Resource": "inc",
         "Next": "Final"
       },
       "Final": {
         "Comment": "The end task",
         "Type": "Task",
-        "Resource": "hello",
+        "Resource": "inc",
         "End": true
       }
     }

@@ -2,6 +2,7 @@ package fc_fusion
 
 import (
 	"log"
+	//"runtime/metrics"
 
 	"github.com/grussorusso/serverledge/internal/config"
 )
@@ -20,12 +21,12 @@ func (p *DefaultFusionPolicy) Init() {
 	}
 }
 
-func (p *DefaultFusionPolicy) OnCompletion(_ *fusionInfo) {
+func (p *DefaultFusionPolicy) OnCompletion(_ ReturnedOutputData) {
 
 }
 
 // OnArrival for default fusion policy is called every time a dag execution terminates
-func (p *DefaultFusionPolicy) OnArrival(info *fusionInfo) {
+func (p *DefaultFusionPolicy) OnArrival(info ReturnedOutputData) {
 	//Solo per Debug
 	//fmt.Printf("ON ARRIVAL DEFAULT WITH REPORT RESULT %v\n", info.ExecReport.Result)
 

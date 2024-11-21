@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/cornelk/hashmap"
@@ -15,9 +16,10 @@ import (
 	"github.com/grussorusso/serverledge/internal/container"
 	"github.com/grussorusso/serverledge/internal/fc"
 	"github.com/grussorusso/serverledge/internal/telemetry"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 
-	"github.com/grussorusso/serverledge/internal/fc_fusion"
 	"github.com/grussorusso/serverledge/internal/fc_scheduling"
 	"github.com/grussorusso/serverledge/internal/function"
 	"github.com/grussorusso/serverledge/internal/node"
@@ -239,6 +241,20 @@ func InvokeFunctionComposition(e echo.Context) error {
 		defer span.End()
 	}
 
+	if telemetry.MetricsEnabled {
+		meter := otel.Meter(os.Getenv("OTEL_SERVICE_NAME"))
+		m, err := telemetry.NewCounterMetric(meter)
+		if err != nil {
+			panic(err)
+		}
+
+		m.RequestCounter.Add(
+			context.WithValue(context.Background(), "ReqId", reqId),
+			1,
+			metric.WithAttributes(attribute.String("fcInvocationCounter", fcReq.Fc.Name)),
+		)
+	}
+
 	if fcReq.Async {
 		//Informazioni per la fusione comunicate al componente all'interno
 		go fc_scheduling.SubmitAsyncCompositionRequest(fcReq)
@@ -251,10 +267,23 @@ func InvokeFunctionComposition(e echo.Context) error {
 		return err
 	}
 
-	//Informazioni comunicate al componente di fusione
+	/*//Informazioni comunicate al componente di fusione
 	err = fc_fusion.SubmitFusionInfos(&fcReq.ExecReport, fcReq.Fc)
 	if err != nil {
 		return err
+	}*/
+
+	if telemetry.MetricsEnabled {
+		fmt.Println("CREATING HISTO FOR FC INFOS")
+		meter := otel.Meter(os.Getenv("OTEL_SERVICE_NAME"))
+		m, err := telemetry.NewHistogramMetric(meter, "FunctionComposition.respTime", "Response time of a function composition")
+		if err != nil {
+			panic(err)
+		}
+		m.Record(
+			fcReq.Ctx,
+			fcReq.ExecReport.ResponseTime,
+			metric.WithAttributes(attribute.String("functionCompositionInvocationRespTime", fcReq.Fc.Name)))
 	}
 
 	if errors.Is(err, node.OutOfResourcesErr) {

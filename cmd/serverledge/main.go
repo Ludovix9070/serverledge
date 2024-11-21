@@ -14,7 +14,6 @@ import (
 	"github.com/grussorusso/serverledge/internal/cache"
 	"github.com/grussorusso/serverledge/internal/config"
 	"github.com/grussorusso/serverledge/internal/fc_fusion"
-	"github.com/grussorusso/serverledge/internal/metrics"
 	"github.com/grussorusso/serverledge/internal/node"
 	"github.com/grussorusso/serverledge/internal/registration"
 	"github.com/grussorusso/serverledge/internal/scheduling"
@@ -133,7 +132,7 @@ func main() {
 	}
 	node.NodeIdentifier = myKey
 
-	go metrics.Init()
+	//go metrics.Init()
 
 	if config.GetBool(config.TRACING_ENABLED, false) {
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -152,6 +151,24 @@ func main() {
 		defer func() {
 			err = errors.Join(err, otelShutdown(context.Background()))
 		}()
+	}
+
+	if config.GetBool(config.METRICS_ENABLED, false) {
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+		defer stop()
+		log.Printf("Enabling metrics\n")
+		otelShutdown, err := telemetry.SetupOTelMetricsSDK(ctx)
+		if err != nil {
+			log.Fatal(err)
+		}
+		// Handle shutdown properly so nothing leaks.
+		defer func() {
+			err = errors.Join(err, otelShutdown(context.Background()))
+		}()
+
+		// invoke fc_fusion.ServerMetricsInit() to use a mux in order to debug metrics on the stdout
+		go fc_fusion.ServerPromMetricsInit()
+		go fc_fusion.PeriodicalMetricsRetrieveFromPrometheus()
 	}
 
 	e := echo.New()
