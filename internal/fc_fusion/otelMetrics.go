@@ -41,8 +41,6 @@ func queryPrometheus(wg *sync.WaitGroup, queryInfos queryInfos, api v1.API, ctx 
 
 	outputMap = parserOutputResult(result, byTerm)
 
-	fmt.Println("OutputMap: ", outputMap)
-
 	switch queryInfos.id {
 	case "AvgTotalColdStartsTime":
 		dataToSend.AvgTotalColdStartsTime = outputMap

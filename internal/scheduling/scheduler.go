@@ -82,7 +82,6 @@ func Run(p Policy) {
 				}
 			}*/
 			if telemetry.MetricsEnabled {
-				fmt.Println("CREATING HISTO FOR FUNCTION ")
 				meter := otel.Meter(os.Getenv("OTEL_SERVICE_NAME"))
 				m, err := telemetry.NewHistogramMetric(meter, "Function.duration", "Duration of a function")
 				if err != nil {
@@ -93,13 +92,10 @@ func Run(p Policy) {
 					c.ExecReport.Duration,
 					metric.WithAttributes(attribute.String("functInvocationCounter", c.Fun.Name)))
 
-				fmt.Println("CREATING HISTO FOR OUTPUT SIZE")
-				//meter := otel.Meter(os.Getenv("OTEL_SERVICE_NAME"))
 				mtr, err := telemetry.NewHistogramMetric(meter, "FunctionOutput.size", "Size of the function output")
 				if err != nil {
 					panic(err)
 				}
-				fmt.Println("RES: ", c.ExecReport.Result, float64(len([]byte(c.ExecReport.Result))))
 				mtr.Record(
 					c.scheduledRequest.Ctx,
 					float64(len([]byte(c.ExecReport.Result))),
@@ -207,7 +203,6 @@ func handleColdStart(r *scheduledRequest) (isSuccess bool) {
 	}
 
 	if telemetry.MetricsEnabled {
-		fmt.Println("CREATING HISTO FOR COLD START")
 		meter := otel.Meter(os.Getenv("OTEL_SERVICE_NAME"))
 		m, err = telemetry.NewHistogramMetric(meter, "ColdStart.duration", "Duration of a cold start")
 		if err != nil {

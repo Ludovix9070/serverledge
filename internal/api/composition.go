@@ -274,7 +274,6 @@ func InvokeFunctionComposition(e echo.Context) error {
 	}*/
 
 	if telemetry.MetricsEnabled {
-		fmt.Println("CREATING HISTO FOR FC INFOS")
 		meter := otel.Meter(os.Getenv("OTEL_SERVICE_NAME"))
 		m, err := telemetry.NewHistogramMetric(meter, "FunctionComposition.respTime", "Response time of a function composition")
 		if err != nil {

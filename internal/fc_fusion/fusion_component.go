@@ -51,11 +51,13 @@ func fusionDecide(infos ReturnedOutputData) {
 	//Dummy
 	condition := true //MUST be determined by an appropriate policy analyzing the report
 	if condition {
-		fmt.Println("Data Map:")
 		for key := range dataMap {
+			fmt.Println("------------------------------------------")
 			fmt.Println("Timestamp Key: ", key)
-			fmt.Println("  Datas: ", dataMap[key])
+			fmt.Println("Metrics: ", dataMap[key])
+			fmt.Println("------------------------------------------")
 		}
+		fmt.Println("")
 	} else {
 		fmt.Println("DON'T FUSE HERE with total dataMap: ", dataMap)
 	}
