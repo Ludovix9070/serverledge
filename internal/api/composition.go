@@ -312,3 +312,31 @@ func InvokeFunctionComposition(e echo.Context) error {
 		})
 	}
 }
+
+func FuseFunctionComposition(c echo.Context) error {
+	var comp fc.FunctionComposition
+	// here we only need the name of the function composition
+	err := json.NewDecoder(c.Request().Body).Decode(&comp)
+	if err != nil && err != io.EOF {
+		log.Printf("Could not parse delete request - error during decoding: %v", err)
+		return err
+	}
+
+	composition, ok := fc.GetFC(comp.Name)
+	if !ok {
+		log.Printf("Dropping request for non existing function '%s'", comp.Name)
+		return c.JSON(http.StatusNotFound, "the request function composition to delete does not exist")
+	}
+	// only if RemoveFnOnDeletion is true, we also remove functions and associated warm (idle) containers
+	msg := ""
+
+	log.Printf("New request: fusing %s", composition.Name)
+	err = composition.Fuse()
+	if err != nil {
+		log.Printf("Failed fusion: %v", err)
+		return c.JSON(http.StatusServiceUnavailable, "")
+	}
+
+	response := struct{ Fused string }{composition.Name + msg}
+	return c.JSON(http.StatusOK, response)
+}

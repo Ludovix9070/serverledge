@@ -555,3 +555,14 @@ func (cer *CompositionExecutionReport) Equals(other types.Comparable) bool {
 
 	return allEquals
 }
+
+// Fuse evaluate the fusion of a Function Composition
+func (fc *FunctionComposition) Fuse() error {
+	//cli, err := utils.GetEtcdClient()
+	_, err := utils.GetEtcdClient()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -36,6 +36,7 @@ func StartAPIServer(e *echo.Echo) {
 	e.POST("/composeASL", CreateFunctionCompositionFromASL)
 	e.POST("/uncompose", DeleteFunctionComposition)
 	e.GET("/fc", GetFunctionCompositions)
+	e.POST("/fuse", FuseFunctionComposition)
 
 	// Start server
 	portNumber := config.GetInt(config.API_PORT, 1323)

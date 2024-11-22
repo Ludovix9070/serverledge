@@ -90,6 +90,12 @@ var compInvokeCmd = &cobra.Command{
 	Run:   invokeFunctionComposition,
 }
 
+var compFuseCmd = &cobra.Command{
+	Use:   "fuse",
+	Short: "Evaluate fusion of a function composition",
+	Run:   fuseFunctionComposition,
+}
+
 var compPollCmd = &cobra.Command{
 	Use:   "peek",
 	Short: "Polls the result of an asynchronous function composition invocation",
@@ -163,6 +169,9 @@ func Init() {
 	compDeleteCmd.Flags().StringVarP(&compName, "function-composition", "f", "", "name of the function composition")
 
 	rootCmd.AddCommand(compListCmd)
+
+	rootCmd.AddCommand(compFuseCmd)
+	compFuseCmd.Flags().StringVarP(&compName, "function-composition", "f", "", "name of the function composition")
 
 	// TODO: maybe useless
 	rootCmd.AddCommand(compPollCmd)
@@ -560,6 +569,28 @@ func deleteComposition(cmd *cobra.Command, args []string) {
 	resp, err := utils.PostJson(url, requestBody)
 	if err != nil {
 		fmt.Printf("Deletion request failed: %v\n", err)
+		os.Exit(2)
+	}
+	utils.PrintJsonResponse(resp.Body)
+}
+
+func fuseFunctionComposition(cmd *cobra.Command, args []string) {
+	if compName == "" {
+		cmd.Help()
+		os.Exit(1)
+	}
+	request := fc.FunctionComposition{
+		Name: compName,
+	}
+	requestBody, err := json.Marshal(request)
+	if err != nil {
+		fmt.Printf("Error: %v", err)
+		os.Exit(2)
+	}
+	url := fmt.Sprintf("http://%s:%d/fuse", ServerConfig.Host, ServerConfig.Port)
+	resp, err := utils.PostJson(url, requestBody)
+	if err != nil {
+		fmt.Printf("Fuse request failed: %v\n", err)
 		os.Exit(2)
 	}
 	utils.PrintJsonResponse(resp.Body)
