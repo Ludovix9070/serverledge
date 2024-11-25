@@ -2,6 +2,6 @@ package fc_fusion
 
 type FusionPolicy interface {
 	Init()
-	OnCompletion(info ReturnedOutputData)
-	OnArrival(info ReturnedOutputData)
+	OnCompletion(info *ReturnedOutputData, fr *fusionRequest)
+	OnArrival(info *ReturnedOutputData, fr *fusionRequest)
 }

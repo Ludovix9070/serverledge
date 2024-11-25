@@ -15,7 +15,9 @@ import (
 	"github.com/grussorusso/serverledge/internal/client"
 	"github.com/grussorusso/serverledge/internal/container"
 	"github.com/grussorusso/serverledge/internal/fc"
+	"github.com/grussorusso/serverledge/internal/fc_fusion"
 	"github.com/grussorusso/serverledge/internal/telemetry"
+	"github.com/grussorusso/serverledge/utils"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
@@ -327,11 +329,12 @@ func FuseFunctionComposition(c echo.Context) error {
 		log.Printf("Dropping request for non existing function '%s'", comp.Name)
 		return c.JSON(http.StatusNotFound, "the request function composition to delete does not exist")
 	}
+
 	// only if RemoveFnOnDeletion is true, we also remove functions and associated warm (idle) containers
 	msg := ""
 
 	log.Printf("New request: fusing %s", composition.Name)
-	err = composition.Fuse()
+	err = Fuse(composition)
 	if err != nil {
 		log.Printf("Failed fusion: %v", err)
 		return c.JSON(http.StatusServiceUnavailable, "")
@@ -339,4 +342,20 @@ func FuseFunctionComposition(c echo.Context) error {
 
 	response := struct{ Fused string }{composition.Name + msg}
 	return c.JSON(http.StatusOK, response)
+}
+
+// Fuse evaluate the fusion of a Function Composition
+func Fuse(fc *fc.FunctionComposition) error {
+	//cli, err := utils.GetEtcdClient()
+	_, err := utils.GetEtcdClient()
+	if err != nil {
+		return err
+	}
+
+	err = fc_fusion.SubmitFusionRequest(fc)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

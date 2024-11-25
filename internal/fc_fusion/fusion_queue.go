@@ -5,7 +5,7 @@ import "sync"
 // FIFOQueue defines a circular queue
 type FIFOQueue struct {
 	sync.Mutex
-	data     []*fusionInfo
+	data     []*fusionRequest
 	capacity int
 	head     int
 	tail     int
@@ -13,9 +13,9 @@ type FIFOQueue struct {
 }
 
 type queue interface {
-	Enqueue(r *fusionInfo) bool
-	Dequeue() *fusionInfo
-	Front() *fusionInfo
+	Enqueue(r *fusionRequest) bool
+	Dequeue() *fusionRequest
+	Front() *fusionRequest
 	Len() int
 	Lock()
 	Unlock()
@@ -27,7 +27,7 @@ func NewFIFOQueue(n int) *FIFOQueue {
 		return nil
 	}
 	return &FIFOQueue{
-		data:     make([]*fusionInfo, n),
+		data:     make([]*fusionRequest, n),
 		capacity: n,
 		head:     0,
 		tail:     0,
@@ -46,7 +46,7 @@ func (q *FIFOQueue) IsFull() bool {
 }
 
 // Enqueue pushes an element to the back
-func (q *FIFOQueue) Enqueue(v *fusionInfo) bool {
+func (q *FIFOQueue) Enqueue(v *fusionRequest) bool {
 	if q.IsFull() {
 		return false
 	}
@@ -58,7 +58,7 @@ func (q *FIFOQueue) Enqueue(v *fusionInfo) bool {
 }
 
 // Dequeue fetches a element from queue
-func (q *FIFOQueue) Dequeue() *fusionInfo {
+func (q *FIFOQueue) Dequeue() *fusionRequest {
 	if q.IsEmpty() {
 		return nil
 	}
@@ -68,7 +68,7 @@ func (q *FIFOQueue) Dequeue() *fusionInfo {
 	return v
 }
 
-func (q *FIFOQueue) Front() *fusionInfo {
+func (q *FIFOQueue) Front() *fusionRequest {
 	if q.IsEmpty() {
 		return nil
 	}

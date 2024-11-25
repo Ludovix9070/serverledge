@@ -15,20 +15,19 @@ type ReturnedOutputData struct {
 }
 
 // struttura contenente le informazioni necessarie per la fusione prese dopo una esecuzione
-type fusionInfo struct {
-	ExecReport      *fc.CompositionExecutionReport
-	Composition     *fc.FunctionComposition
-	decisionChannel chan fusionDecision
+type fusionRequest struct {
+	Composition   *fc.FunctionComposition
+	returnChannel chan fusionResult
 }
 
-type fusionDecision struct {
+type fusionResult struct {
 	action action
 }
 
 // sono le costanti per le azioni di fusione
 const (
-	EVALUATE_FUSION action = 0
-	NOOP                   = 1
+	FUSED action = 0
+	NOOP         = 1
 )
 
 type action int64
