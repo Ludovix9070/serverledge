@@ -1,0 +1,24 @@
+{
+    "Comment": "A simple state machine with archives task nodes",
+    "StartAt": "FirstState",
+    "States": {
+      "FirstState": {
+        "Comment": "The first task",
+        "Type": "Task",
+        "Resource": "simple_inc_archive",
+        "Next": "SecondState"
+      },
+      "SecondState": {
+        "Comment": "The second task",
+        "Type": "Task",
+        "Resource": "simple_double_archive",
+        "Next": "Final"
+      },
+      "Final": {
+        "Comment": "The end task",
+        "Type": "Task",
+        "Resource": "simple_inc_archive",
+        "End": true
+      }
+    }
+  }
