@@ -50,6 +50,11 @@ func CombineFunctions(fun1, fun2 *function.Function) (*function.Function, error)
 		TarFunctionCode: base64.StdEncoding.EncodeToString(combinedTar),
 	}
 
+	err = saveCombinedFunction(combinedFunction)
+	if err != nil {
+		return nil, err
+	}
+
 	return combinedFunction, nil
 }
 
@@ -270,5 +275,19 @@ func saveTarToFile(tarData []byte, filePath string) error {
 	}
 
 	fmt.Printf("File TAR saved with success in %s\n", filePath)
+	return nil
+}
+
+func saveCombinedFunction(f *function.Function) error {
+	_, ok := function.GetFunction(f.Name)
+	if ok {
+		return fmt.Errorf("dropping fusionized function for already existing function '%s'\n", f.Name)
+	}
+
+	err := f.SaveToEtcd()
+	if err != nil {
+		return fmt.Errorf("error in fusionized function creation: %w", err)
+	}
+
 	return nil
 }

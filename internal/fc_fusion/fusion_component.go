@@ -108,7 +108,28 @@ func fusionSingleFcDecide(fr *fusionRequest) {
 		}
 		fmt.Println("")
 
-		fr.returnChannel <- fusionResult{action: FUSED}
+		ok, _ := FuseFc(fr.Composition)
+		if !ok {
+			//fmt.Println("new functions vector is ", fr.Composition.Functions)
+			fr.returnChannel <- fusionResult{action: NOOP}
+		} else {
+			fmt.Println("new functions vector is ", fr.Composition.Functions)
+			/*err := fr.Composition.Delete()
+			if err != nil {
+				log.Printf("Failed old function composition deletion: %v", err)
+				return
+			}
+
+			err = fr.Composition.SaveToEtcd()
+			if err != nil {
+				log.Printf("Failed fused function composition creation: %v", err)
+				return
+			}*/
+
+			fr.returnChannel <- fusionResult{action: FUSED}
+		}
+
+		//fr.returnChannel <- fusionResult{action: FUSED}
 	} else {
 		fmt.Println("DON'T FUSE HERE with total dataMap: ", dataMap)
 		fr.returnChannel <- fusionResult{action: NOOP}

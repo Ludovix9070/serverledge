@@ -330,9 +330,6 @@ func FuseFunctionComposition(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, "the request function composition to delete does not exist")
 	}
 
-	// only if RemoveFnOnDeletion is true, we also remove functions and associated warm (idle) containers
-	msg := ""
-
 	log.Printf("New request: fusing %s", composition.Name)
 	err = Fuse(composition)
 	if err != nil {
@@ -340,8 +337,7 @@ func FuseFunctionComposition(c echo.Context) error {
 		return c.JSON(http.StatusServiceUnavailable, "")
 	}
 
-	response := struct{ Fused string }{composition.Name + msg}
-	return c.JSON(http.StatusOK, response)
+	return fc_fusion.PrintDagOrderedJSON(c, &composition.Workflow)
 }
 
 // Fuse evaluate the fusion of a Function Composition

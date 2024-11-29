@@ -43,7 +43,7 @@ func NewSimpleNode(f string) *SimpleNode {
 
 func (s *SimpleNode) Exec(compRequest *CompositionRequest, params ...map[string]interface{}) (map[string]interface{}, error) {
 	//VERSIONE GIUSTA--------------------------------
-	//funct, ok := function.GetFunction(s.Func)
+	funct, ok := function.GetFunction(s.Func)
 	//----------------------
 
 	//solo per effettuare una fusione di prova
@@ -65,7 +65,7 @@ func (s *SimpleNode) Exec(compRequest *CompositionRequest, params ...map[string]
 	fmt.Printf("Contenuto Final Function:\n%s\n", finalFunc)*/
 
 	//PARTE NUOVA SOLO PER PROVARE
-	func1, ok := function.GetFunction("simple_inc_archive")
+	/*func1, ok := function.GetFunction("simple_inc_archive")
 	func2, ok := function.GetFunction("simple_double_archive")
 
 	funct, error := CombineFunctions(func1, func2)
@@ -74,7 +74,7 @@ func (s *SimpleNode) Exec(compRequest *CompositionRequest, params ...map[string]
 	}
 
 	fmt.Println("HERE with func fused named ", funct.Name)
-	//------------
+	//------------*/
 
 	if !ok {
 		return nil, fmt.Errorf("SimpleNode.function is null: you must initialize SimpleNode's function to execute it")
@@ -93,8 +93,8 @@ func (s *SimpleNode) Exec(compRequest *CompositionRequest, params ...map[string]
 	// the rest of the code is similar to a single function execution
 	now := time.Now()
 	//ORIGINALE
-	//requestId := fmt.Sprintf("%s-%s%d", s.Func, node.NodeIdentifier[len(node.NodeIdentifier)-5:], now.Nanosecond())
-	requestId := fmt.Sprintf("%s-%s%d", funct.Name, node.NodeIdentifier[len(node.NodeIdentifier)-5:], now.Nanosecond())
+	requestId := fmt.Sprintf("%s-%s%d", s.Func, node.NodeIdentifier[len(node.NodeIdentifier)-5:], now.Nanosecond())
+	//requestId := fmt.Sprintf("%s-%s%d", funct.Name, node.NodeIdentifier[len(node.NodeIdentifier)-5:], now.Nanosecond())
 
 	ctx := context.WithValue(context.Background(), "ReqId", requestId)
 	s.inputMutex.Lock()

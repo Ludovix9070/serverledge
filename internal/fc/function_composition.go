@@ -97,6 +97,10 @@ func NewFC(name string, dag Dag, functions []*function.Function, removeFnOnDelet
 	}, nil
 }
 
+func (fc *FunctionComposition) GetEtcdKeyFromExt() string {
+	return getEtcdKey(fc.Name)
+}
+
 func (fc *FunctionComposition) getEtcdKey() string {
 	return getEtcdKey(fc.Name)
 }
@@ -206,9 +210,11 @@ func (fc *FunctionComposition) Invoke(r *CompositionRequest) (CompositionExecuti
 	var err error
 	requestId := ReqId(r.Id())
 	input := r.Params
+
+	PrintDag(&fc.Workflow)
+
 	// initialize struct progress from dag
 	progress := InitProgressRecursive(requestId, &fc.Workflow)
-
 	// initialize partial data with input, directly from the Start.Next node
 	pd := NewPartialData(requestId, fc.Workflow.Start.Next, "nil", input)
 	pd.Data = input
@@ -554,6 +560,19 @@ func (cer *CompositionExecutionReport) Equals(other types.Comparable) bool {
 	}
 
 	return allEquals
+}
+
+func PrintDag(dag *Dag) {
+	fmt.Println("DAG State:")
+	for id, node := range dag.Nodes {
+		fmt.Printf("Node ID: %s, Type: %T\n", id, node)
+		if simpleNode, ok := node.(*SimpleNode); ok {
+			fmt.Printf("  Func: %s, OutputTo: %v\n", simpleNode.Func, simpleNode.OutputTo)
+		}
+		if hasNext, ok := node.(HasNext); ok {
+			fmt.Printf("  Next: %v\n", hasNext.GetNext())
+		}
+	}
 }
 
 // Fuse evaluate the fusion of a Function Composition
