@@ -50,7 +50,7 @@ func FuseFc(fcomp *fc.FunctionComposition) (bool, error) {
 						if !ok {
 							return false, fmt.Errorf("fun2 error")
 						}
-						mergedFunc, error := fc.CombineFunctions(func1, func2)
+						mergedFunc, error := CombineFunctions(func1, func2)
 						if error != nil {
 							return false, fmt.Errorf("combining functions error")
 						}

@@ -1,4 +1,4 @@
-package fc
+package fc_fusion
 
 import (
 	"archive/tar"
