@@ -101,7 +101,14 @@ func combineTarFiles(tar1, tar2 []byte, handler1, handler2, NameFun1, NameFun2 s
 
 // This functions adds files of a single archive with handling of homonymy and relative imports using function name as a prefix
 func addTarContentsWithUpdatedImports(tw *tar.Writer, tarContents []byte, prefix string) error {
+	shouldUpdateImports, err := shouldUpdatePythonImports(tarContents)
+	if err != nil {
+		return err
+	}
+
 	tr := tar.NewReader(bytes.NewReader(tarContents))
+	seenDirectories := make(map[string]bool) // Keep track of directories already processed
+
 	for {
 		header, err := tr.Next()
 		if err == io.EOF {
@@ -111,13 +118,23 @@ func addTarContentsWithUpdatedImports(tw *tar.Writer, tarContents []byte, prefix
 			return err
 		}
 
+		// Capture directory path for the file
+		dir := fmt.Sprintf("%s/%s", prefix, getDirectoryFromPath(header.Name))
+		if dir != "" && !seenDirectories[dir] {
+			// Add an __init__.py file for this directory
+			if err := addInitFileToTar(tw, dir); err != nil {
+				return err
+			}
+			seenDirectories[dir] = true
+		}
+
 		var fileContents bytes.Buffer
 		if _, err := io.Copy(&fileContents, tr); err != nil {
 			return err
 		}
 
 		// Check if it's a Python File
-		if strings.HasSuffix(header.Name, ".py") {
+		if strings.HasSuffix(header.Name, ".py") && shouldUpdateImports {
 			updatedCode, err := updatePythonImports(fileContents.String(), prefix)
 			if err != nil {
 				return err
@@ -140,6 +157,58 @@ func addTarContentsWithUpdatedImports(tw *tar.Writer, tarContents []byte, prefix
 	return nil
 }
 
+// Check if it's necessary to update imports-->only if the tar contains only files
+func shouldUpdatePythonImports(tarContents []byte) (bool, error) {
+	tr := tar.NewReader(bytes.NewReader(tarContents))
+	hasOnlyFiles := true
+
+	for {
+		header, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return false, err
+		}
+
+		// ONLY FOR DEBUG
+		//fmt.Printf("Processing file: %s, Typeflag: %d\n", header.Name, header.Typeflag)
+
+		// Extract dir from path
+		dir := getDirectoryFromPath(header.Name)
+
+		if header.Typeflag == tar.TypeDir || dir != "" {
+			//fmt.Printf("Detected directory: %s\n", dir)
+			hasOnlyFiles = false
+			break
+		}
+	}
+
+	return hasOnlyFiles, nil
+}
+
+// Helper function to extract directory path from a file path
+func getDirectoryFromPath(filePath string) string {
+	if idx := strings.LastIndex(filePath, "/"); idx != -1 {
+		return filePath[:idx]
+	}
+	return ""
+}
+
+// Helper function to add __init__.py to a directory in the tar
+func addInitFileToTar(tw *tar.Writer, dir string) error {
+	filename := fmt.Sprintf("%s__init__.py", dir)
+	header := &tar.Header{
+		Name: filename,
+		Mode: 0600,
+		Size: 0, // Empty __init__.py file
+	}
+	if err := tw.WriteHeader(header); err != nil {
+		return err
+	}
+	return nil
+}
+
 // Updates of the imports with the new prefix necessary to handling directory creation
 func updatePythonImports(originalCode, prefix string) (string, error) {
 	// Regex to find all import entries in the code
@@ -154,7 +223,6 @@ func updatePythonImports(originalCode, prefix string) (string, error) {
 			return match
 		}
 
-		// Modifica il modulo importato aggiungendo il prefisso e mantenendo i nomi originali
 		//Modifying the imported module adding prefix and maintaining the original names to maintain unchanged the rest of the code
 		if parts[0] == "import" {
 			// handling of multiple imports
@@ -197,6 +265,15 @@ func generateCombinedHandlerWithNamespaces(prefix1, handler1, prefix2, handler2 
 
 	// Combined handler.py final code generated as follows
 	code := fmt.Sprintf(`
+
+import sys, os
+
+def find_and_add_to_sys_path():
+    start_dir = os.path.dirname(os.path.abspath(__file__))
+    sys.path.insert(0, start_dir)
+    
+find_and_add_to_sys_path()
+
 from %s.%s import %s as %s_%s
 from %s.%s import %s as %s_%s
 

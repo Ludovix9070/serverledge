@@ -2,6 +2,7 @@ package scheduling
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/grussorusso/serverledge/internal/container"
@@ -48,6 +49,7 @@ func Execute(contID container.ContainerID, r *scheduledRequest, fromComposition 
 		completions <- &completion{scheduledRequest: r, contID: contID} // Success == false
 		logs, errLogs := container.GetLog(contID)
 		if errLogs == nil {
+			log.Printf("\nexecution failed in container - logs of container %s:\n====================\n%s====================", contID, logs)        // FIXME: a volte quando ci sono due funzioni diverse, si accede al container con lo stesso runtime, ma non necessariamente con la funzione corretta.
 			return fmt.Errorf("\nexecution failed in container - logs of container %s:\n====================\n%s====================", contID, logs) // FIXME: a volte quando ci sono due funzioni diverse, si accede al container con lo stesso runtime, ma non necessariamente con la funzione corretta.
 		}
 		return fmt.Errorf("execution failed in container - can't read the logs: %v", errLogs)
