@@ -94,6 +94,13 @@ func FuseFc(fcomp *fc.FunctionComposition) (bool, error) {
 									node.OutputTo = newNodeId
 								}
 
+							case *fc.ChoiceNode:
+								for i, next := range node.Alternatives {
+									if next == simpleNode.Id || next == nextSimpleNode.Id {
+										node.Alternatives[i] = newNodeId
+									}
+								}
+
 							default:
 								log.Printf("Unhandled node type: %T", node)
 							}
@@ -156,7 +163,7 @@ func replaceWithNewFc(comp *fc.FunctionComposition) error {
 
 	// Remove the function from the local cache
 	//forse inutile perchè la versione in cache sarà quella aggiornata
-	//cache.GetCacheInstance().Delete(fc.Name)
+	//cache.GetCacheInstance().Delete(comp.Name)
 
 	err = comp.SaveToEtcd()
 	if err != nil {

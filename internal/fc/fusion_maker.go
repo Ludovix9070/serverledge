@@ -107,7 +107,8 @@ func addTarContentsWithUpdatedImports(tw *tar.Writer, tarContents []byte, prefix
 	}
 
 	tr := tar.NewReader(bytes.NewReader(tarContents))
-	seenDirectories := make(map[string]bool) // Keep track of directories already processed
+	//OPTIONAL->to add __init__.py
+	//seenDirectories := make(map[string]bool) // Keep track of directories already processed
 
 	for {
 		header, err := tr.Next()
@@ -118,15 +119,16 @@ func addTarContentsWithUpdatedImports(tw *tar.Writer, tarContents []byte, prefix
 			return err
 		}
 
+		//OPTIONAL->add __init__.py
 		// Capture directory path for the file
-		dir := fmt.Sprintf("%s/%s", prefix, getDirectoryFromPath(header.Name))
+		/*dir := fmt.Sprintf("%s/%s", prefix, getDirectoryFromPath(header.Name))
 		if dir != "" && !seenDirectories[dir] {
 			// Add an __init__.py file for this directory
 			if err := addInitFileToTar(tw, dir); err != nil {
 				return err
 			}
 			seenDirectories[dir] = true
-		}
+		}*/
 
 		var fileContents bytes.Buffer
 		if _, err := io.Copy(&fileContents, tr); err != nil {
