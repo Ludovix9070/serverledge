@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
+	"github.com/grussorusso/serverledge/internal/cache"
 	"github.com/grussorusso/serverledge/internal/fc"
 	"github.com/grussorusso/serverledge/internal/function"
 	"github.com/grussorusso/serverledge/utils"
@@ -17,6 +19,12 @@ func FuseFc(fcomp *fc.FunctionComposition) (bool, error) {
 	PrintDag(&fcomp.Workflow)
 	visited := map[fc.DagNodeId]bool{}
 	nodeQueue := []fc.DagNodeId{fcomp.Workflow.Start.GetNext()[0]}
+	changed := false
+
+	/*err := cleanCurrentComp(fcomp)
+	if err != nil {
+		return false, err
+	}*/
 
 	for len(nodeQueue) > 0 {
 		currentId := nodeQueue[0]
@@ -50,6 +58,17 @@ func FuseFc(fcomp *fc.FunctionComposition) (bool, error) {
 						if !ok {
 							return false, fmt.Errorf("fun2 error")
 						}
+
+						if containsPython(func1.Runtime) && containsPython(func2.Runtime) {
+							if func1.Runtime != func2.Runtime {
+								nodeQueue = append(nodeQueue, simpleNode.GetNext()...)
+								continue
+							}
+						} else {
+							nodeQueue = append(nodeQueue, simpleNode.GetNext()...)
+							continue
+						}
+
 						mergedFunc, error := CombineFunctions(func1, func2)
 						if error != nil {
 							return false, fmt.Errorf("combining functions error")
@@ -74,7 +93,9 @@ func FuseFc(fcomp *fc.FunctionComposition) (bool, error) {
 							switch node := prevNode.(type) {
 							case *fc.StartNode:
 								if node.Next == simpleNode.Id || node.Next == nextSimpleNode.Id {
-									node.Next = newNodeId
+									//node.Next = newNodeId
+									node.SetNext(newNodeId)
+									fcomp.Workflow.Start = node
 								}
 
 							case *fc.SimpleNode:
@@ -120,6 +141,7 @@ func FuseFc(fcomp *fc.FunctionComposition) (bool, error) {
 
 						// Continue from the current node
 						nodeQueue = append(nodeQueue, mergedNode.GetNext()...)
+						changed = true
 						continue
 					}
 				}
@@ -130,9 +152,11 @@ func FuseFc(fcomp *fc.FunctionComposition) (bool, error) {
 		}
 	}
 
-	err := replaceWithNewFc(fcomp)
-	if err != nil {
-		return false, err
+	if changed {
+		err := replaceWithNewFc(fcomp)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	return true, nil
@@ -162,8 +186,7 @@ func replaceWithNewFc(comp *fc.FunctionComposition) error {
 	}
 
 	// Remove the function from the local cache
-	//forse inutile perchè la versione in cache sarà quella aggiornata
-	//cache.GetCacheInstance().Delete(comp.Name)
+	cache.GetCacheInstance().Delete(comp.Name)
 
 	err = comp.SaveToEtcd()
 	if err != nil {
@@ -172,6 +195,43 @@ func replaceWithNewFc(comp *fc.FunctionComposition) error {
 	}
 
 	return nil
+}
+
+/*func cleanCurrentComp(comp *fc.FunctionComposition) error {
+	cli, err := utils.GetEtcdClient()
+	if err != nil {
+		return err
+	}
+	ctx := context.TODO()
+
+	dresp, err := cli.Delete(ctx, comp.GetEtcdKeyFromExt())
+	if err != nil || dresp.Deleted != 1 {
+		return fmt.Errorf("failed Delete: %v", err)
+	}
+
+	// Remove the function from the local cache
+	cache.GetCacheInstance().Delete(comp.Name)
+
+	return nil
+}
+
+func replaceWithNewFc(comp *fc.FunctionComposition) error {
+	err := comp.SaveToEtcd()
+	if err != nil {
+		log.Printf("Failed creation: %v", err)
+		return fmt.Errorf("failed new fc creation")
+	}
+
+	//ONLY FOR DEBUG
+	//only to check if etcd accessed in the subsequent invocation
+	//cache.GetCacheInstance().Delete(comp.Name)
+
+	return nil
+}*/
+
+func containsPython(s string) bool {
+	// Verifica se la stringa contiene "python" o "Python"
+	return strings.Contains(s, "python") || strings.Contains(s, "Python")
 }
 
 // ONLY FOR DEBUG

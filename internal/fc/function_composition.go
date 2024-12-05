@@ -153,6 +153,7 @@ func GetFC(name string) (*FunctionComposition, bool) {
 	val, found := getFCFromCache(name)
 	if !found {
 		// cache miss
+		fmt.Println("CACHE MISS!")
 		f, err := getFCFromEtcd(name)
 		if err != nil {
 			return nil, false
@@ -211,7 +212,8 @@ func (fc *FunctionComposition) Invoke(r *CompositionRequest) (CompositionExecuti
 	requestId := ReqId(r.Id())
 	input := r.Params
 
-	PrintDag(&fc.Workflow)
+	//ONLY FOR DEBUG
+	//PrintDag(&fc.Workflow)
 
 	// initialize struct progress from dag
 	progress := InitProgressRecursive(requestId, &fc.Workflow)

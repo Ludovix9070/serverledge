@@ -70,6 +70,11 @@ func (s *StartNode) GetNext() []DagNodeId {
 	return []DagNodeId{s.Next}
 }
 
+func (s *StartNode) SetNext(newId DagNodeId) {
+	// we only have one output
+	s.Next = newId
+}
+
 func (s *StartNode) Width() int {
 	return 1
 }
