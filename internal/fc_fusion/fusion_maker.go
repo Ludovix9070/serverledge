@@ -42,8 +42,8 @@ func CombineFunctions(fun1, fun2 *function.Function) (*function.Function, error)
 	combinedFunction := &function.Function{
 		Name:            fun1.Name + "_" + fun2.Name,
 		Runtime:         fun1.Runtime,
-		MemoryMB:        fun1.MemoryMB + fun2.MemoryMB,
-		CPUDemand:       fun1.CPUDemand + fun2.CPUDemand,
+		MemoryMB:        MaxInt64(fun1.MemoryMB, fun2.MemoryMB),
+		CPUDemand:       MaxFloat64(fun1.CPUDemand, fun2.CPUDemand),
 		Handler:         "combined_handler.central_handler",
 		CustomImage:     fun1.CustomImage,
 		Signature:       combineSignatures(fun1.Signature, fun2.Signature),
@@ -369,4 +369,18 @@ func saveCombinedFunction(f *function.Function) error {
 	}
 
 	return nil
+}
+
+func MaxInt64(a, b int64) int64 {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func MaxFloat64(a, b float64) float64 {
+	if a > b {
+		return a
+	}
+	return b
 }

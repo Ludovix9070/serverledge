@@ -139,8 +139,12 @@ func FuseFc(fcomp *fc.FunctionComposition) (bool, error) {
 							delete(fcomp.Functions, func2.Name)
 						}
 
-						// Continue from the current node
-						nodeQueue = append(nodeQueue, mergedNode.GetNext()...)
+						/*// Continue from the current node
+						nodeQueue = append(nodeQueue, mergedNode.GetNext()...)*/
+
+						// Re-evaluate the newly merged node for further fusions
+						nodeQueue = append([]fc.DagNodeId{mergedNode.Id}, nodeQueue...)
+
 						changed = true
 						continue
 					}
