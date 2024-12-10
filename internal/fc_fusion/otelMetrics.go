@@ -18,6 +18,7 @@ import (
 )
 
 var metricsInfos chan *ReturnedOutputData
+var QueryStarter chan string
 var dataToSend ReturnedOutputData
 
 // Struct to represent query with its id
@@ -119,6 +120,8 @@ func PeriodicalMetricsRetrieveFromPrometheus() {
 	api := v1.NewAPI(client)
 	ctx := context.Background()
 
+	QueryStarter = make(chan string, 500)
+
 	queries := []queryInfos{
 		//{"sum(rate(ColdStart_duration_seconds_sum[1m])) / clamp_min(sum(rate(ColdStart_duration_seconds_count[1m])),1)", "AVG Cold Start Duration [1m]"},
 		{"AvgTotalColdStartsTime", "sum(ColdStart_duration_seconds_sum) / clamp_min(sum(ColdStart_duration_seconds_count),1)"},
@@ -126,12 +129,14 @@ func PeriodicalMetricsRetrieveFromPrometheus() {
 		{"AvgFunDurationTime", "sum(Function_duration_seconds_sum) by (functInvocationCounter) / sum(Function_duration_seconds_count) by (functInvocationCounter)"},
 		{"AvgOutputFunSize", "sum(FunctionOutput_size_seconds_sum) by (functionSizeHistogram) / sum(FunctionOutput_size_seconds_count) by (functionSizeHistogram)"},
 	}
-	ticker := time.NewTicker(20 * time.Second)
-	defer ticker.Stop()
-
+	//ticker := time.NewTicker(20 * time.Second)
+	//defer ticker.Stop()
+	var fcName string //metriche da chiedere per una singola function composition
 	for {
 		select {
-		case <-ticker.C:
+		//case <-ticker.C:
+		case fcName = <-QueryStarter:
+			fmt.Println("HERE", fcName)
 			var wg sync.WaitGroup
 
 			for _, query := range queries {

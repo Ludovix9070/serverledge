@@ -118,6 +118,10 @@ func CreateFusionPolicy() fc_fusion.FusionPolicy {
 	policyConf := config.GetString(config.FUSION_POLICY, "default")
 	log.Printf("Configured policy: %s\n", policyConf)
 
+	if policyConf == "alwaysfuse" {
+		return &fc_fusion.DefaultFusionPolicy{}
+	}
+
 	//per ora ho solo la default policy
 	return &fc_fusion.DefaultFusionPolicy{}
 }

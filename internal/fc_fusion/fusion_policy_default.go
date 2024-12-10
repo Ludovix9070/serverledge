@@ -22,23 +22,20 @@ func (p *DefaultFusionPolicy) Init() {
 	}
 }
 
-func (p *DefaultFusionPolicy) OnCompletion(_ *ReturnedOutputData, fr *fusionRequest) {
+func (p *DefaultFusionPolicy) OnCompletion(fr *fusionRequest) {
 
 }
 
 // OnArrival for default fusion policy is called every time a dag execution terminates
-func (p *DefaultFusionPolicy) OnArrival(info *ReturnedOutputData, fr *fusionRequest) {
+func (p *DefaultFusionPolicy) OnArrival(fr *fusionRequest) {
 	//Solo per Debug
 	//fmt.Printf("ON ARRIVAL DEFAULT WITH REPORT RESULT %v\n", info.ExecReport.Result)
 
-	//fusionDecide(*info)
+	/*//fusionDecide(*info)
 	if info != nil {
 		saveInfos(*info)
 		fusionDecide()
-	}
-
-	if fr != nil {
-		fusionSingleFcDecide(fr)
-	}
+	}*/
+	fusionSingleFcDecide(fr)
 
 }

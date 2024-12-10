@@ -34,15 +34,15 @@ func Run(p FusionPolicy) {
 	p.Init()
 	log.Println("Fusion Component started.")
 
-	var r *ReturnedOutputData
+	//var r *ReturnedOutputData
 	var f *fusionRequest
 	for {
 		select {
-		case r = <-metricInfos: // receive composition infos
-			go p.OnArrival(r, nil)
+		/*case r = <-metricInfos: // receive composition infos
+		go p.OnArrival(r, nil)*/
 
 		case f = <-fusionInvocationChannel: // receive composition infos
-			go p.OnArrival(nil, f)
+			go p.OnArrival(f)
 		}
 
 	}
@@ -56,7 +56,12 @@ func SubmitInfos(data ReturnedOutputData) error {
 }
 
 func SubmitFusionRequest(fc *fc.FunctionComposition) error {
-	//fusionInvocationChannel <- fc // send infos
+	QueryStarter <- fc.Name // send fc name to get metrics from Prometheus
+	//wait for the metrics data
+	r := <-metricInfos
+	saveInfos(*r)
+	//fusionDecide() //da rimuovere, solo per vedere se stampa bene
+	//QUI DEVO USARE LE METRICHE PER VALUTARE IL DAG
 
 	fusionRequest := fusionRequest{
 		Composition:   fc,
