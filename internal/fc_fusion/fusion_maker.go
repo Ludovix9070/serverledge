@@ -3,7 +3,9 @@ package fc_fusion
 import (
 	"archive/tar"
 	"bytes"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -40,7 +42,8 @@ func CombineFunctions(fun1, fun2 *function.Function) (*function.Function, error)
 
 	// Combined Function Creation, still to tune hyperparameters
 	combinedFunction := &function.Function{
-		Name:            fun1.Name + "_" + fun2.Name,
+		//Name:            fun1.Name + "_" + fun2.Name,
+		Name:            GenerateFunctionHash(fun1.Name, fun2.Name),
 		Runtime:         fun1.Runtime,
 		MemoryMB:        MaxInt64(fun1.MemoryMB, fun2.MemoryMB),
 		CPUDemand:       MaxFloat64(fun1.CPUDemand, fun2.CPUDemand),
@@ -383,4 +386,11 @@ func MaxFloat64(a, b float64) float64 {
 		return a
 	}
 	return b
+}
+
+// GenerateFunctionHash genera un hash SHA256 basato sui nomi delle due funzioni
+func GenerateFunctionHash(name1, name2 string) string {
+	hasher := sha256.New()
+	hasher.Write([]byte(name1 + name2))
+	return hex.EncodeToString(hasher.Sum(nil)) // Restituisce l'hash completo (64 caratteri)
 }
