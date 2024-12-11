@@ -363,7 +363,8 @@ func saveTarToFile(tarData []byte, filePath string) error {
 func saveCombinedFunction(f *function.Function) error {
 	_, ok := function.GetFunction(f.Name)
 	if ok {
-		return fmt.Errorf("dropping fusionized function for already existing function '%s'\n", f.Name)
+		//return fmt.Errorf("dropping fusionized function for already existing function '%s'\n", f.Name)
+		return nil
 	}
 
 	err := f.SaveToEtcd()

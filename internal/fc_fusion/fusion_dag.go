@@ -12,6 +12,7 @@ import (
 	"github.com/grussorusso/serverledge/internal/function"
 	"github.com/grussorusso/serverledge/utils"
 	"github.com/labstack/echo/v4"
+	"github.com/lithammer/shortuuid"
 )
 
 // Evaluate fusion between nodes in the dag
@@ -70,13 +71,17 @@ func FuseFc(fcomp *fc.FunctionComposition) (bool, error) {
 						}
 
 						mergedFunc, error := CombineFunctions(func1, func2)
+						fmt.Println("Primo giro")
 						if error != nil {
+							fmt.Println("Giro con errore ", error)
 							return false, fmt.Errorf("combining functions error")
 						}
 
 						//Update Functions structure of the composition with the new fused func
 						fcomp.Functions[mergedFunc.Name] = mergedFunc
-						newNodeId := fc.DagNodeId(fmt.Sprintf("%s_%s", simpleNode.Id, nextSimpleNode.Id))
+						//per evitare esplosioni, si può usare la versione usata per un normale simple node invece che per uno proveniente da asl
+						//newNodeId := fc.DagNodeId(fmt.Sprintf("%s_%s", simpleNode.Id, nextSimpleNode.Id))
+						newNodeId := fc.DagNodeId(shortuuid.New())
 
 						mergedNode := &fc.SimpleNode{
 							Id:       newNodeId,
@@ -162,6 +167,8 @@ func FuseFc(fcomp *fc.FunctionComposition) (bool, error) {
 			return false, err
 		}
 	}
+
+	fmt.Println("DIM FINALE ", len(fcomp.Workflow.Nodes))
 
 	return true, nil
 }
