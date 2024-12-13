@@ -74,18 +74,32 @@ func combineTarFiles(tar1, tar2 []byte, handler1, handler2, NameFun1, NameFun2 s
 
 	//Adding of the files of the first archive with handling of homonymy
 	//and relative imports using function name as a prefix
-	if err := addTarContentsWithUpdatedImports(tw, tar1, NameFun1); err != nil {
+	/*if err := addTarContentsWithUpdatedImports(tw, tar1, NameFun1); err != nil {
+		return nil, err
+	}*/
+
+	if err := addTarContentsWithUpdatedImports(tw, tar1, "A"); err != nil {
 		return nil, err
 	}
 
 	//Adding of the files of the second archive with handling of homonymy
 	//and relative imports using function name as a prefix
-	if err := addTarContentsWithUpdatedImports(tw, tar2, NameFun2); err != nil {
+	/*if err := addTarContentsWithUpdatedImports(tw, tar2, NameFun2); err != nil {
+		return nil, err
+	}*/
+
+	if err := addTarContentsWithUpdatedImports(tw, tar2, "B"); err != nil {
 		return nil, err
 	}
 
 	// Generation of combined_handler's code
-	combinedCode, err := generateCombinedHandlerWithNamespaces(NameFun1, handler1, NameFun2, handler2, sig1, sig2)
+	/*combinedCode, err := generateCombinedHandlerWithNamespaces(NameFun1, handler1, NameFun2, handler2, sig1, sig2)
+	if err != nil {
+		return nil, err
+	}*/
+
+	// Generation of combined_handler's code
+	combinedCode, err := generateCombinedHandlerWithNamespaces("A", handler1, "B", handler2, sig1, sig2)
 	if err != nil {
 		return nil, err
 	}
@@ -93,6 +107,10 @@ func combineTarFiles(tar1, tar2 []byte, handler1, handler2, NameFun1, NameFun2 s
 	// Added
 	if err := addFileToTar(tw, "combined_handler.py", combinedCode); err != nil {
 		return nil, err
+	}
+
+	if err := addFileToTar(tw, "__init__.py", ""); err != nil {
+		return nil, fmt.Errorf("errore nell'aggiunta di __init__.py: %w", err)
 	}
 
 	if err := tw.Close(); err != nil {
@@ -110,8 +128,29 @@ func addTarContentsWithUpdatedImports(tw *tar.Writer, tarContents []byte, prefix
 	}
 
 	tr := tar.NewReader(bytes.NewReader(tarContents))
-	//OPTIONAL->to add __init__.py
-	//seenDirectories := make(map[string]bool) // Keep track of directories already processed
+
+	seenDirectories := make(map[string]bool)   // Keep track of directories already processed
+	existingInitFiles := make(map[string]bool) // Track directories with __init__.py
+
+	// First pass: collect existing __init__.py files
+	for {
+		header, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		// Check if the file is an __init__.py
+		if strings.HasSuffix(header.Name, "__init__.py") {
+			dir := getDirectoryFromPath(header.Name)
+			existingInitFiles[dir] = true
+		}
+	}
+
+	// Reset tar reader for the second pass
+	tr = tar.NewReader(bytes.NewReader(tarContents))
 
 	for {
 		header, err := tr.Next()
@@ -124,14 +163,17 @@ func addTarContentsWithUpdatedImports(tw *tar.Writer, tarContents []byte, prefix
 
 		//OPTIONAL->add __init__.py
 		// Capture directory path for the file
-		/*dir := fmt.Sprintf("%s/%s", prefix, getDirectoryFromPath(header.Name))
+		dir := fmt.Sprintf("%s/%s", prefix, getDirectoryFromPath(header.Name))
+
+		// Add an __init__.py file for this directory if not already present
 		if dir != "" && !seenDirectories[dir] {
-			// Add an __init__.py file for this directory
-			if err := addInitFileToTar(tw, dir); err != nil {
-				return err
+			if !existingInitFiles[getDirectoryFromPath(header.Name)] {
+				if err := addInitFileToTar(tw, dir, seenDirectories); err != nil {
+					return err
+				}
 			}
 			seenDirectories[dir] = true
-		}*/
+		}
 
 		var fileContents bytes.Buffer
 		if _, err := io.Copy(&fileContents, tr); err != nil {
@@ -200,17 +242,25 @@ func getDirectoryFromPath(filePath string) string {
 	return ""
 }
 
-// Helper function to add __init__.py to a directory in the tar
-func addInitFileToTar(tw *tar.Writer, dir string) error {
-	filename := fmt.Sprintf("%s__init__.py", dir)
+func addInitFileToTar(tw *tar.Writer, dir string, seenDirectories map[string]bool) error {
+	// Controlla se il file è già stato aggiunto
+	if seenDirectories[dir] {
+		return nil
+	}
+
+	// Aggiungi il file `__init__.py` alla directory
+	filename := fmt.Sprintf("%s/__init__.py", strings.TrimSuffix(dir, "/"))
 	header := &tar.Header{
 		Name: filename,
 		Mode: 0600,
-		Size: 0, // Empty __init__.py file
+		Size: 0, // File vuoto
 	}
 	if err := tw.WriteHeader(header); err != nil {
 		return err
 	}
+
+	// Segna la directory come già processata
+	seenDirectories[dir] = true
 	return nil
 }
 
