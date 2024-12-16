@@ -264,7 +264,7 @@ func addInitFileToTar(tw *tar.Writer, dir string, seenDirectories map[string]boo
 	return nil
 }
 
-// Updates of the imports with the new prefix necessary to handling directory creation
+/* //versione funzionante prima degli import relativi
 func updatePythonImports(originalCode, prefix string) (string, error) {
 	// Regex to find all import entries in the code
 	importPattern := `(?m)^(from|import)\s+([a-zA-Z_][a-zA-Z0-9_]*)(\s+import\s+.*)?`
@@ -300,7 +300,143 @@ func updatePythonImports(originalCode, prefix string) (string, error) {
 
 	return updatedCode, nil
 }
+*/
 
+// Updates of the imports with the new prefix necessary to handling directory creation
+/*func updatePythonImports(originalCode, prefix string) (string, error) {
+	// Regex to find all import entries in the code
+	importPattern := `(?m)^(from|import)\s+([a-zA-Z_][a-zA-Z0-9_]*)(\s+import\s+.*)?`
+	re := regexp.MustCompile(importPattern)
+
+	// Replacing with updated import definition
+	updatedCode := re.ReplaceAllStringFunc(originalCode, func(match string) string {
+		parts := strings.Fields(match)
+		if len(parts) < 2 {
+			// Wrong format
+			return match
+		}
+
+		//Modifying the imported module adding prefix and maintaining the original names to maintain unchanged the rest of the code
+		if parts[0] == "import" {
+			// handling of multiple imports
+			modules := strings.Split(parts[1], ",")
+			for i, mod := range modules {
+				modules[i] = fmt.Sprintf("%s", strings.TrimSpace(mod))
+			}
+			return fmt.Sprintf("from . import %s", strings.Join(modules, ", "))
+		} else if parts[0] == "from" && len(parts) >= 3 {
+			// Handling of multiple imports from a specific module
+			importedFunctions := strings.Split(parts[2], ",")
+			for i, funcName := range importedFunctions {
+				importedFunctions[i] = fmt.Sprintf("%s as %s", strings.TrimSpace(funcName), strings.TrimSpace(funcName)) // aggiunge "as" mantenendo il nome originale
+			}
+			return fmt.Sprintf("from %s.%s import %s", prefix, parts[1], strings.Join(importedFunctions, ", "))
+		}
+		return match
+
+	})
+
+	return updatedCode, nil
+}*/
+
+func updatePythonImports(originalCode, prefix string) (string, error) {
+	// Codice da aggiungere
+	/*setupCode := `import sys, os
+	def find_and_add_to_sys_path():
+	    # Usa il percorso assoluto dello script corrente
+	    start_dir = os.path.dirname(os.path.abspath(__file__))
+	    print("sono in normal handler")
+		sys.path.insert(0, start_dir)
+
+	find_and_add_to_sys_path()
+	`
+
+		// Controlla se il codice per find_and_add_to_sys_path() è già presente
+		if !strings.Contains(originalCode, "find_and_add_to_sys_path()") {
+			// Inserisce il codice all'inizio del file
+			originalCode = setupCode + "\n" + originalCode
+		}*/
+
+	// Regex per trovare tutti gli import nel codice
+	importPattern := `(?m)^(from|import)\s+([a-zA-Z_][a-zA-Z0-9_]*)(\s+import\s+.*)?`
+	re := regexp.MustCompile(importPattern)
+
+	// Sostituzione degli import
+	updatedCode := re.ReplaceAllStringFunc(originalCode, func(match string) string {
+		parts := strings.Fields(match)
+		if len(parts) < 2 {
+			// Formato non valido
+			return match
+		}
+
+		// Modifica del modulo importato aggiungendo il prefisso
+		if parts[0] == "import" {
+			// Gestione di più moduli importati
+			modules := strings.Split(parts[1], ",")
+			for i, mod := range modules {
+				modules[i] = fmt.Sprintf("%s", strings.TrimSpace(mod))
+			}
+			return fmt.Sprintf("from . import %s", strings.Join(modules, ", "))
+		} else if parts[0] == "from" && len(parts) >= 3 {
+			// Gestione di più elementi importati da un modulo specifico
+			importedFunctions := strings.Split(parts[2], ",")
+			for i, funcName := range importedFunctions {
+				importedFunctions[i] = fmt.Sprintf("%s as %s", strings.TrimSpace(funcName), strings.TrimSpace(funcName)) // Aggiunge "as" mantenendo il nome originale
+			}
+			return fmt.Sprintf("from %s.%s import %s", prefix, parts[1], strings.Join(importedFunctions, ", "))
+		}
+		return match
+	})
+
+	return updatedCode, nil
+}
+
+func generateCombinedHandlerWithNamespaces(prefix1, handler1, prefix2, handler2 string, sig1, sig2 *function.Signature) (string, error) {
+	// Parsing handler, mod1 the module (es. inc) and func1 is the defined function handler
+	mod1, func1, err := parseHandler(handler1)
+	if err != nil {
+		return "", err
+	}
+	mod2, func2, err := parseHandler(handler2)
+	if err != nil {
+		return "", err
+	}
+
+	//Signature handling to correcly handle the params passing
+	mappingLogic, err := generateMappingLogic(sig1, sig2)
+	if err != nil {
+		return "", err
+	}
+
+	// Combined handler.py final code generated as follows
+	code := fmt.Sprintf(`
+
+import sys, os
+
+def restrict_import_to_current_dir():
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    sys.path = [current_dir, os.path.join(current_dir, "%s"), os.path.join(current_dir, "%s")]
+
+restrict_import_to_current_dir()
+
+from .%s.%s import %s as %s_%s
+from .%s.%s import %s as %s_%s
+
+def central_handler(params, context):
+    # Esegui il primo handler
+    intermediate_result = %s_%s(params, context)
+
+    # Adatta gli output del primo handler come input per il secondo
+%s
+    # Esegui il secondo handler
+    final_result = %s_%s(transformed_params, context)
+    return final_result
+`, prefix1, prefix2, prefix1, mod1, func1, prefix1, func1, prefix2, mod2, func2, prefix2, func2, prefix1, func1, mappingLogic, prefix2, func2)
+
+	return code, nil
+}
+
+/* //versione prima degli import relativi
 func generateCombinedHandlerWithNamespaces(prefix1, handler1, prefix2, handler2 string, sig1, sig2 *function.Signature) (string, error) {
 	// Parsing handler, mod1 the module (es. inc) and func1 is the defined function handler
 	mod1, func1, err := parseHandler(handler1)
@@ -326,7 +462,7 @@ import sys, os
 def find_and_add_to_sys_path():
     start_dir = os.path.dirname(os.path.abspath(__file__))
     sys.path.insert(0, start_dir)
-    
+
 find_and_add_to_sys_path()
 
 from %s.%s import %s as %s_%s
@@ -344,7 +480,7 @@ def central_handler(params, context):
 `, prefix1, mod1, func1, prefix1, func1, prefix2, mod2, func2, prefix2, func2, prefix1, func1, mappingLogic, prefix2, func2)
 
 	return code, nil
-}
+}*/
 
 // It extracts the module and the defined function handler from the handler definition
 func parseHandler(handler string) (module, function string, err error) {
