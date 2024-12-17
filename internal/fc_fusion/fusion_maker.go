@@ -47,7 +47,7 @@ func CombineFunctions(fun1, fun2 *function.Function) (*function.Function, error)
 		Runtime:         fun1.Runtime,
 		MemoryMB:        MaxInt64(fun1.MemoryMB, fun2.MemoryMB),
 		CPUDemand:       MaxFloat64(fun1.CPUDemand, fun2.CPUDemand),
-		Handler:         "combined_handler.central_handler",
+		Handler:         "mypkg.combined_handler.central_handler",
 		CustomImage:     fun1.CustomImage,
 		Signature:       combineSignatures(fun1.Signature, fun2.Signature),
 		TarFunctionCode: base64.StdEncoding.EncodeToString(combinedTar),
@@ -78,7 +78,7 @@ func combineTarFiles(tar1, tar2 []byte, handler1, handler2, NameFun1, NameFun2 s
 		return nil, err
 	}*/
 
-	if err := addTarContentsWithUpdatedImports(tw, tar1, "A"); err != nil {
+	if err := addTarContentsWithUpdatedImports(tw, tar1, "mypkg/A"); err != nil {
 		return nil, err
 	}
 
@@ -88,7 +88,7 @@ func combineTarFiles(tar1, tar2 []byte, handler1, handler2, NameFun1, NameFun2 s
 		return nil, err
 	}*/
 
-	if err := addTarContentsWithUpdatedImports(tw, tar2, "B"); err != nil {
+	if err := addTarContentsWithUpdatedImports(tw, tar2, "mypkg/B"); err != nil {
 		return nil, err
 	}
 
@@ -105,13 +105,13 @@ func combineTarFiles(tar1, tar2 []byte, handler1, handler2, NameFun1, NameFun2 s
 	}
 
 	// Added
-	if err := addFileToTar(tw, "combined_handler.py", combinedCode); err != nil {
+	if err := addFileToTar(tw, "mypkg/combined_handler.py", combinedCode); err != nil {
 		return nil, err
 	}
 
-	if err := addFileToTar(tw, "__init__.py", ""); err != nil {
+	/*if err := addFileToTar(tw, "mypkg/__init__.py", ""); err != nil {
 		return nil, fmt.Errorf("errore nell'aggiunta di __init__.py: %w", err)
-	}
+	}*/
 
 	if err := tw.Close(); err != nil {
 		return nil, err
@@ -120,6 +120,7 @@ func combineTarFiles(tar1, tar2 []byte, handler1, handler2, NameFun1, NameFun2 s
 	return buf.Bytes(), nil
 }
 
+/* // funziona ma non gestisci differenti mypkg
 // This functions adds files of a single archive with handling of homonymy and relative imports using function name as a prefix
 func addTarContentsWithUpdatedImports(tw *tar.Writer, tarContents []byte, prefix string) error {
 	shouldUpdateImports, err := shouldUpdatePythonImports(tarContents)
@@ -201,6 +202,319 @@ func addTarContentsWithUpdatedImports(tw *tar.Writer, tarContents []byte, prefix
 			return err
 		}
 	}
+	return nil
+}*/
+
+/*ok con relativi ma duplicati init
+func addTarContentsWithUpdatedImports(tw *tar.Writer, tarContents []byte, prefix string) error {
+	shouldUpdateImports, err := shouldUpdatePythonImports(tarContents)
+	if err != nil {
+		return err
+	}
+
+	tr := tar.NewReader(bytes.NewReader(tarContents))
+
+	seenDirectories := make(map[string]bool)   // Keep track of directories already processed
+	existingInitFiles := make(map[string]bool) // Track directories with __init__.py
+
+	// First pass: collect existing __init__.py files
+	for {
+		header, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		// Check if the file is an __init__.py
+		if strings.HasSuffix(header.Name, "__init__.py") {
+			dir := getDirectoryFromPath(header.Name)
+			existingInitFiles[dir] = true
+		}
+	}
+
+	// Reset tar reader for the second pass
+	tr = tar.NewReader(bytes.NewReader(tarContents))
+
+	for {
+		header, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		// Read file contents
+		var fileContents bytes.Buffer
+		if _, err := io.Copy(&fileContents, tr); err != nil {
+			return err
+		}
+
+		// Verifica se il percorso contiene già una sottostruttura `mypkg`
+		parts := strings.Split(header.Name, "/")
+		newPath := header.Name
+
+		// Se il percorso contiene già `mypkg`, sostituisci solo la prima parte
+		if len(parts) > 1 && parts[0] == "mypkg" {
+			parts[0] = prefix
+			newPath = strings.Join(parts, "/")
+		} else {
+			// Altrimenti, aggiungi il prefisso una sola volta
+			newPath = fmt.Sprintf("%s/%s", prefix, header.Name)
+		}
+
+		// Rimuovi eventuali slash finali
+		newPath = strings.TrimSuffix(newPath, "/")
+
+		// Aggiorna header.Name
+		header.Name = newPath
+
+		// Aggiorna il contenuto del file Python se necessario
+		if strings.HasSuffix(header.Name, ".py") && shouldUpdateImports {
+			updatedCode, err := updatePythonImports(fileContents.String(), prefix)
+			if err != nil {
+				return err
+			}
+			fileContents = *bytes.NewBufferString(updatedCode)
+		}
+
+		// Aggiungi __init__.py alla directory, se necessario
+		dir := getDirectoryFromPath(newPath)
+		if dir != "" && !seenDirectories[dir] {
+			// Aggiungi __init__.py solo se non già presente
+			if !existingInitFiles[dir] {
+				if err := addInitFileToTar(tw, dir, seenDirectories); err != nil {
+					return err
+				}
+			}
+			seenDirectories[dir] = true
+		}
+
+		// Aggiorna l'header con la nuova dimensione del file
+		header.Size = int64(fileContents.Len())
+		if err := tw.WriteHeader(header); err != nil {
+			return err
+		}
+		if _, err := io.Copy(tw, &fileContents); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}*/
+
+/* //versione ok ma init sbagliati
+func addTarContentsWithUpdatedImports(tw *tar.Writer, tarContents []byte, prefix string) error {
+	shouldUpdateImports, err := shouldUpdatePythonImports(tarContents)
+	if err != nil {
+		return err
+	}
+
+	tr := tar.NewReader(bytes.NewReader(tarContents))
+
+	seenDirectories := make(map[string]bool)   // Keep track of directories already processed
+	existingInitFiles := make(map[string]bool) // Track directories with __init__.py
+
+	// First pass: collect existing __init__.py files
+	for {
+		header, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		// Check if the file is an __init__.py and save its full directory path
+		if strings.HasSuffix(header.Name, "__init__.py") {
+			dir := getDirectoryFromPath(header.Name)
+			fullDirPath := fmt.Sprintf("%s/%s", prefix, dir)
+			existingInitFiles[fullDirPath] = true
+		}
+	}
+
+	// Reset tar reader for the second pass
+	tr = tar.NewReader(bytes.NewReader(tarContents))
+
+	for {
+		header, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		// Read file contents
+		var fileContents bytes.Buffer
+		if _, err := io.Copy(&fileContents, tr); err != nil {
+			return err
+		}
+
+		// Verifica se il percorso contiene già una sottostruttura `mypkg`
+		parts := strings.Split(header.Name, "/")
+		newPath := header.Name
+		original_dir := getDirectoryFromPath(header.Name)
+
+		// Se il percorso contiene già `mypkg`, sostituisci solo la prima parte
+		if len(parts) > 1 && parts[0] == "mypkg" {
+			parts[0] = prefix
+			newPath = strings.Join(parts, "/")
+		} else {
+			// Altrimenti, aggiungi il prefisso una sola volta
+			newPath = fmt.Sprintf("%s/%s", prefix, header.Name)
+		}
+
+		// Rimuovi eventuali slash finali
+		newPath = strings.TrimSuffix(newPath, "/")
+
+		// Aggiorna header.Name
+		header.Name = newPath
+
+		// Aggiorna il contenuto del file Python se necessario
+		if strings.HasSuffix(header.Name, ".py") && shouldUpdateImports {
+			updatedCode, err := updatePythonImports(fileContents.String(), prefix)
+			if err != nil {
+				return err
+			}
+			fileContents = *bytes.NewBufferString(updatedCode)
+		}
+
+		// Aggiungi __init__.py alla directory, se necessario
+		dir := getDirectoryFromPath(newPath)
+		if dir != "" && !seenDirectories[dir] {
+			if original_dir != "" && !seenDirectories[original_dir] {
+				// Aggiungi __init__.py solo se non già presente
+				if !existingInitFiles[dir] {
+					if !existingInitFiles[original_dir] {
+						if err := addInitFileToTar(tw, dir, seenDirectories); err != nil {
+							return err
+						}
+						existingInitFiles[dir] = true // Aggiorna che ora il file è stato aggiunto
+					}
+				}
+				seenDirectories[dir] = true
+			}
+		}
+
+		// Aggiorna l'header con la nuova dimensione del file
+		header.Size = int64(fileContents.Len())
+		if err := tw.WriteHeader(header); err != nil {
+			return err
+		}
+		if _, err := io.Copy(tw, &fileContents); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}*/
+
+func addTarContentsWithUpdatedImports(tw *tar.Writer, tarContents []byte, prefix string) error {
+	shouldUpdateImports, err := shouldUpdatePythonImports(tarContents)
+	if err != nil {
+		return err
+	}
+
+	tr := tar.NewReader(bytes.NewReader(tarContents))
+
+	//seenDirectories := make(map[string]bool)   // Keep track of directories already processed
+	//existingInitFiles := make(map[string]bool) // Track directories with __init__.py
+
+	/*// First pass: collect existing __init__.py files
+	for {
+		header, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		// Check if the file is an __init__.py and save its full directory path
+		if strings.HasSuffix(header.Name, "__init__.py") {
+			dir := getDirectoryFromPath(header.Name)
+			fullDirPath := fmt.Sprintf("%s/%s", prefix, dir)
+			existingInitFiles[fullDirPath] = true
+		}
+	}
+
+	// Reset tar reader for the second pass
+	tr = tar.NewReader(bytes.NewReader(tarContents))*/
+
+	for {
+		header, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		// Read file contents
+		var fileContents bytes.Buffer
+		if _, err := io.Copy(&fileContents, tr); err != nil {
+			return err
+		}
+
+		// Determine the new path and original directory
+		parts := strings.Split(header.Name, "/")
+		newPath := header.Name
+
+		// Check if the path already contains "mypkg"
+		if len(parts) > 1 && parts[0] == "mypkg" {
+			parts[0] = prefix
+			newPath = strings.Join(parts, "/")
+		} else {
+			// Otherwise, add the prefix
+			newPath = fmt.Sprintf("%s/%s", prefix, header.Name)
+		}
+
+		// Remove trailing slashes
+		newPath = strings.TrimSuffix(newPath, "/")
+
+		// Update header.Name
+		header.Name = newPath
+
+		// Update Python imports if necessary
+		if strings.HasSuffix(header.Name, ".py") && shouldUpdateImports {
+			updatedCode, err := updatePythonImports(fileContents.String(), prefix)
+			if err != nil {
+				return err
+			}
+			fileContents = *bytes.NewBufferString(updatedCode)
+		}
+
+		/*// Ensure __init__.py exists in the directory
+		dir := getDirectoryFromPath(newPath)
+
+		// Add __init__.py only if it's not already added in this directory
+		if dir != "" && !seenDirectories[dir] {
+			// Skip adding __init__.py if it already exists in this directory
+			if !existingInitFiles[dir] {
+				// Ensure __init__.py is added to this directory
+				if err := addInitFileToTar(tw, dir, seenDirectories); err != nil {
+					return err
+				}
+				// Mark this directory as having an __init__.py file
+				existingInitFiles[dir] = true
+			}
+			// Mark the directory as processed
+			seenDirectories[dir] = true
+		}*/
+
+		// Update the header with the new file size
+		header.Size = int64(fileContents.Len())
+		if err := tw.WriteHeader(header); err != nil {
+			return err
+		}
+		if _, err := io.Copy(tw, &fileContents); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -338,6 +652,27 @@ func updatePythonImports(originalCode, prefix string) (string, error) {
 
 	return updatedCode, nil
 }*/
+/*//forse meglio per import relativi, da testare
+func updatePythonImports(originalCode, prefix string) (string, error) {
+    importPattern := `(?m)^(from\s+|import\s+)([a-zA-Z_][a-zA-Z0-9_]*)(.*)?$`
+    re := regexp.MustCompile(importPattern)
+
+    updatedCode := re.ReplaceAllStringFunc(originalCode, func(match string) string {
+        parts := strings.Fields(match)
+        if len(parts) < 2 {
+            return match
+        }
+        if strings.HasPrefix(match, "from") {
+            return fmt.Sprintf("from .%s.%s%s", prefix, parts[1], strings.Join(parts[2:], " "))
+        } else if strings.HasPrefix(match, "import") {
+            return fmt.Sprintf("from .%s import %s", prefix, parts[1])
+        }
+        return match
+    })
+
+    return updatedCode, nil
+}
+*/
 
 func updatePythonImports(originalCode, prefix string) (string, error) {
 	// Codice da aggiungere
@@ -483,12 +818,20 @@ def central_handler(params, context):
 }*/
 
 // It extracts the module and the defined function handler from the handler definition
-func parseHandler(handler string) (module, function string, err error) {
+/*func parseHandler(handler string) (module, function string, err error) {
 	parts := bytes.Split([]byte(handler), []byte("."))
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("invalid handler: %s", handler)
 	}
 	return string(parts[0]), string(parts[1]), nil
+}*/
+
+func parseHandler(handler string) (module, function string, err error) {
+	parts := bytes.Split([]byte(handler), []byte("."))
+	if len(parts) < 2 {
+		return "", "", fmt.Errorf("invalid handler: %s", handler)
+	}
+	return string(parts[len(parts)-2]), string(parts[len(parts)-1]), nil
 }
 
 func generateMappingLogic(sig1, sig2 *function.Signature) (string, error) {
