@@ -652,48 +652,47 @@ func updatePythonImports(originalCode, prefix string) (string, error) {
 
 	return updatedCode, nil
 }*/
-/*//forse meglio per import relativi, da testare
+//forse meglio per import relativi, da testare
 func updatePythonImports(originalCode, prefix string) (string, error) {
-    importPattern := `(?m)^(from\s+|import\s+)([a-zA-Z_][a-zA-Z0-9_]*)(.*)?$`
-    re := regexp.MustCompile(importPattern)
+	importPattern := `(?m)^(from\s+|import\s+)([a-zA-Z_][a-zA-Z0-9_]*)(.*)?$`
+	re := regexp.MustCompile(importPattern)
 
-    updatedCode := re.ReplaceAllStringFunc(originalCode, func(match string) string {
-        parts := strings.Fields(match)
-        if len(parts) < 2 {
-            return match
-        }
-        if strings.HasPrefix(match, "from") {
-            return fmt.Sprintf("from .%s.%s%s", prefix, parts[1], strings.Join(parts[2:], " "))
-        } else if strings.HasPrefix(match, "import") {
-            return fmt.Sprintf("from .%s import %s", prefix, parts[1])
-        }
-        return match
-    })
+	updatedCode := re.ReplaceAllStringFunc(originalCode, func(match string) string {
+		parts := strings.Fields(match)
+		if len(parts) < 2 {
+			return match
+		}
+		if strings.HasPrefix(match, "from") {
+			return fmt.Sprintf("from .%s%s", parts[1], strings.Join(parts[2:], " "))
+		} else if strings.HasPrefix(match, "import") {
+			return fmt.Sprintf("from . import %s", parts[1])
+		}
+		return match
+	})
 
-    return updatedCode, nil
+	return updatedCode, nil
 }
-*/
 
-func updatePythonImports(originalCode, prefix string) (string, error) {
-	// Codice da aggiungere
-	/*setupCode := `import sys, os
-	def find_and_add_to_sys_path():
-	    # Usa il percorso assoluto dello script corrente
-	    start_dir = os.path.dirname(os.path.abspath(__file__))
-	    print("sono in normal handler")
-		sys.path.insert(0, start_dir)
+/*func updatePythonImports(originalCode, prefix string) (string, error) {
+// Codice da aggiungere
+/*setupCode := `import sys, os
+def find_and_add_to_sys_path():
+    # Usa il percorso assoluto dello script corrente
+    start_dir = os.path.dirname(os.path.abspath(__file__))
+    print("sono in normal handler")
+	sys.path.insert(0, start_dir)
 
-	find_and_add_to_sys_path()
-	`
+find_and_add_to_sys_path()
+`
 
-		// Controlla se il codice per find_and_add_to_sys_path() è già presente
-		if !strings.Contains(originalCode, "find_and_add_to_sys_path()") {
-			// Inserisce il codice all'inizio del file
-			originalCode = setupCode + "\n" + originalCode
-		}*/
+	// Controlla se il codice per find_and_add_to_sys_path() è già presente
+	if !strings.Contains(originalCode, "find_and_add_to_sys_path()") {
+		// Inserisce il codice all'inizio del file
+		originalCode = setupCode + "\n" + originalCode
+	}*/
 
-	// Regex per trovare tutti gli import nel codice
-	importPattern := `(?m)^(from|import)\s+([a-zA-Z_][a-zA-Z0-9_]*)(\s+import\s+.*)?`
+// Regex per trovare tutti gli import nel codice
+/*importPattern := `(?m)^(from|import)\s+([a-zA-Z_][a-zA-Z0-9_]*)(\s+import\s+.*)?`
 	re := regexp.MustCompile(importPattern)
 
 	// Sostituzione degli import
@@ -724,7 +723,7 @@ func updatePythonImports(originalCode, prefix string) (string, error) {
 	})
 
 	return updatedCode, nil
-}
+}*/
 
 func generateCombinedHandlerWithNamespaces(prefix1, handler1, prefix2, handler2 string, sig1, sig2 *function.Signature) (string, error) {
 	// Parsing handler, mod1 the module (es. inc) and func1 is the defined function handler
