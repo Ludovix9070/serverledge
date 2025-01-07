@@ -3,6 +3,7 @@ package fc_fusion
 import (
 	"fmt"
 	"log"
+	"reflect"
 	"runtime"
 	"time"
 
@@ -102,17 +103,136 @@ func fusionSingleFcDecide(fr *fusionRequest) {
 	//for all the fc? TODO
 	//dataMap[infos.Timestamp] = infos
 	//Dummy
-	fmt.Println("FUSE COMMAND for composition ", fr.Composition.Name)
+	fmt.Println("FUSE COMMAND with Default/Alwaysfuse policy for composition ", fr.Composition.Name)
 	condition := true //MUST be determined by an appropriate policy analyzing the report
 	if condition {
 		for key := range dataMap {
 			fmt.Println("------------------------------------------")
 			fmt.Println("Timestamp Key: ", key)
-			fmt.Println("Metrics: ", dataMap[key])
+			fmt.Println("Metrics: ", dataMap[key].ReturnedInfos)
 			fmt.Println("------------------------------------------")
 		}
 		fmt.Println("")
 
+		ok, _ := FuseFc(fr.Composition)
+		if !ok {
+			fr.returnChannel <- fusionResult{action: NOOP}
+		} else {
+			fmt.Println("new functions vector is ", fr.Composition.Functions)
+			fr.returnChannel <- fusionResult{action: FUSED}
+		}
+	} else {
+		fmt.Println("DON'T FUSE HERE with total dataMap: ", dataMap)
+		fr.returnChannel <- fusionResult{action: NOOP}
+	}
+
+}
+
+func fusionEvaluate(fr *fusionRequest, activeTerms PolicyTerms) {
+	//saveInfos
+	//for all the fc? TODO
+	//dataMap[infos.Timestamp] = infos
+	//Dummy
+	fmt.Println("FUSE COMMAND with Evaluate Policy for composition ", fr.Composition.Name)
+	for key := range dataMap {
+		fmt.Println("------------------------------------------")
+		fmt.Println("Timestamp Key: ", key)
+		fmt.Println("Metrics: ", dataMap[key].ReturnedInfos)
+		fmt.Println("------------------------------------------")
+	}
+	fmt.Println("")
+
+	var latestTime time.Time
+	var latestData ReturnedOutputData
+
+	for timestamp, data := range dataMap {
+		if timestamp.After(latestTime) {
+			latestTime = timestamp
+			latestData = data
+			fmt.Println(latestData)
+		}
+	}
+
+	/*for key := range fr.Composition.Functions {
+		fmt.Println("------------------------------------------")
+		fmt.Println("Function: ", fr.Composition.Functions[key])
+		fmt.Println("------------------------------------------")
+		v := reflect.ValueOf(latestData.ReturnedInfos)
+		t := reflect.TypeOf(latestData.ReturnedInfos)
+
+		//sto ciclando sui campi di QueryInformations
+		for i := 0; i < v.NumField(); i++ {
+			fieldName := t.Field(i).Name // Nome del campo es.AvgFcRespTime
+			fieldValue := v.Field(i)     // Valore del campo
+
+			if fieldValue.Kind() == reflect.Map {
+				fmt.Printf("Campo: %s\n", fieldName)
+
+				// Controlla se la mappa non è nil
+				if !fieldValue.IsNil() {
+					// Controlla se esiste la chiave nella mappa
+					mapValue := fieldValue.MapIndex(reflect.ValueOf(key))
+					if mapValue.IsValid() {
+						fmt.Printf("  Chiave '%s' trovata, Valore: %v\n", key, mapValue)
+					} else {
+						fmt.Printf("  Chiave '%s' non trovata\n", key)
+					}
+				} else {
+					fmt.Printf("  La mappa è nil\n")
+				}
+			} else {
+				fmt.Printf("Campo %s non è una mappa\n", fieldName)
+			}
+		}
+
+	}*/
+
+	for key := range fr.Composition.Functions {
+		fmt.Println("------------------------------------------")
+		fmt.Println("Function: ", fr.Composition.Functions[key])
+		fmt.Println("------------------------------------------")
+
+		v := reflect.ValueOf(latestData.ReturnedInfos)
+		t := reflect.TypeOf(latestData.ReturnedInfos)
+
+		// Uso la reflection per iterare sui campi di QueryInformations
+		activeTermsValue := reflect.ValueOf(activeTerms) // Reflection su activeTerms
+
+		for i := 0; i < v.NumField(); i++ {
+			fieldName := t.Field(i).Name // Nome del campo (es. AvgFcRespTime)
+			fieldValue := v.Field(i)     // Valore del campo
+
+			// Usa reflection per controllare se il campo è attivo in activeTerms
+			activeField := activeTermsValue.FieldByName(fieldName)
+			if activeField.IsValid() && activeField.Bool() { // Controlla se il campo esiste e se è true
+				fmt.Printf("Campo '%s' è attivo in activeTerms\n", fieldName)
+
+				if fieldValue.Kind() == reflect.Map {
+					fmt.Printf("Campo: %s\n", fieldName)
+
+					// Controlla se la mappa non è nil
+					if !fieldValue.IsNil() {
+						// Controlla se esiste la chiave nella mappa
+						mapValue := fieldValue.MapIndex(reflect.ValueOf(key))
+						if mapValue.IsValid() {
+							fmt.Printf("  Chiave '%s' trovata, Valore: %v\n", key, mapValue)
+						} else {
+							fmt.Printf("  Chiave '%s' non trovata\n", key)
+						}
+					} else {
+						fmt.Printf("  La mappa è nil\n")
+					}
+				} else {
+					fmt.Printf("Campo %s non è una mappa\n", fieldName)
+				}
+			} else {
+				fmt.Printf("Campo '%s' non è attivo in activeTerms\n", fieldName)
+			}
+		}
+	}
+
+	condition := true //MUST be determined by an appropriate policy analyzing the report
+	if condition {
 		ok, _ := FuseFc(fr.Composition)
 		if !ok {
 			fr.returnChannel <- fusionResult{action: NOOP}

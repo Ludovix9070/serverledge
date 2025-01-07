@@ -90,7 +90,7 @@ func Run(p Policy) {
 				m.Record(
 					c.scheduledRequest.Ctx,
 					c.ExecReport.Duration,
-					metric.WithAttributes(attribute.String("functInvocationCounter", c.Fun.Name)))
+					metric.WithAttributes(attribute.String("functNameDuration", c.Fun.Name)))
 
 				mtr, err := telemetry.NewHistogramMetric(meter, "FunctionOutput.size", "Size of the function output")
 				if err != nil {
@@ -99,7 +99,16 @@ func Run(p Policy) {
 				mtr.Record(
 					c.scheduledRequest.Ctx,
 					float64(len([]byte(c.ExecReport.Result))),
-					metric.WithAttributes(attribute.String("functionSizeHistogram", c.Fun.Name)))
+					metric.WithAttributes(attribute.String("functNameOutputSize", c.Fun.Name)))
+
+				metr, err := telemetry.NewHistogramMetric(meter, "Function.initTime", "Init time of a function")
+				if err != nil {
+					panic(err)
+				}
+				metr.Record(
+					c.scheduledRequest.Ctx,
+					c.ExecReport.InitTime,
+					metric.WithAttributes(attribute.String("functNameInitTime", c.Fun.Name)))
 
 			}
 		}
@@ -226,7 +235,7 @@ func handleColdStart(r *scheduledRequest) (isSuccess bool) {
 			m.Record(
 				r.Ctx,
 				duration.Seconds(),
-				metric.WithAttributes(attribute.String("functColdStartHistogram", r.Fun.Name)))
+				metric.WithAttributes(attribute.String("functNameColdStartHistogram", r.Fun.Name)))
 		}
 		execLocally(r, newContainer, false)
 		return true

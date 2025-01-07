@@ -120,6 +120,8 @@ func CreateFusionPolicy() fc_fusion.FusionPolicy {
 
 	if policyConf == "alwaysfuse" {
 		return &fc_fusion.DefaultFusionPolicy{}
+	} else if policyConf == "evaluate" {
+		return &fc_fusion.EvaluateFusionPolicy{}
 	}
 
 	//per ora ho solo la default policy

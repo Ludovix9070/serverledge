@@ -284,7 +284,7 @@ func InvokeFunctionComposition(e echo.Context) error {
 		m.Record(
 			fcReq.Ctx,
 			fcReq.ExecReport.ResponseTime,
-			metric.WithAttributes(attribute.String("functionCompositionInvocationRespTime", fcReq.Fc.Name)))
+			metric.WithAttributes(attribute.String("functionCompositionNameRespTime", fcReq.Fc.Name)))
 	}
 
 	if errors.Is(err, node.OutOfResourcesErr) {

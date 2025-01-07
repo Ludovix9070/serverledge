@@ -11,5 +11,6 @@ scheduler.policy: default
  
 tracing.enabled: false
 metrics.enabled: true
-fusion.policy: alwaysfuse
+#fusion.policy: alwaysfuse
+fusion.policy: evaluate
 #tracing.outfile: ./tracing/tracing.json

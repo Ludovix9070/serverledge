@@ -44,13 +44,15 @@ func queryPrometheus(wg *sync.WaitGroup, queryInfos queryInfos, api v1.API, ctx 
 
 	switch queryInfos.id {
 	case "AvgTotalColdStartsTime":
-		dataToSend.AvgTotalColdStartsTime = outputMap
+		dataToSend.ReturnedInfos.AvgTotalColdStartsTime = outputMap
 	case "AvgFcRespTime":
-		dataToSend.AvgFcRespTime = outputMap
+		dataToSend.ReturnedInfos.AvgFcRespTime = outputMap
 	case "AvgFunDurationTime":
-		dataToSend.AvgFunDurationTime = outputMap
+		dataToSend.ReturnedInfos.AvgFunDurationTime = outputMap
 	case "AvgOutputFunSize":
-		dataToSend.AvgOutputFunSize = outputMap
+		dataToSend.ReturnedInfos.AvgOutputFunSize = outputMap
+	case "AvgFunInitTime":
+		dataToSend.ReturnedInfos.AvgFunInitTime = outputMap
 	}
 
 }
@@ -124,10 +126,12 @@ func PeriodicalMetricsRetrieveFromPrometheus() {
 
 	queries := []queryInfos{
 		//{"sum(rate(ColdStart_duration_seconds_sum[1m])) / clamp_min(sum(rate(ColdStart_duration_seconds_count[1m])),1)", "AVG Cold Start Duration [1m]"},
-		{"AvgTotalColdStartsTime", "sum(ColdStart_duration_seconds_sum) / clamp_min(sum(ColdStart_duration_seconds_count),1)"},
-		{"AvgFcRespTime", "sum(FunctionComposition_respTime_seconds_sum) by (functionCompositionInvocationRespTime) / clamp_min(sum(FunctionComposition_respTime_seconds_count) by (functionCompositionInvocationRespTime), 1)"},
-		{"AvgFunDurationTime", "sum(Function_duration_seconds_sum) by (functInvocationCounter) / sum(Function_duration_seconds_count) by (functInvocationCounter)"},
-		{"AvgOutputFunSize", "sum(FunctionOutput_size_seconds_sum) by (functionSizeHistogram) / sum(FunctionOutput_size_seconds_count) by (functionSizeHistogram)"},
+		//{"AvgTotalColdStartsTime", "sum(ColdStart_duration_seconds_sum) / clamp_min(sum(ColdStart_duration_seconds_count),1)"},
+		{"AvgTotalColdStartsTime", "sum(ColdStart_duration_seconds_sum) by (functNameColdStartHistogram) / clamp_min(sum(ColdStart_duration_seconds_count) by (functNameColdStartHistogram),1)"},
+		{"AvgFcRespTime", "sum(FunctionComposition_respTime_seconds_sum) by (functionCompositionNameRespTime) / clamp_min(sum(FunctionComposition_respTime_seconds_count) by (functionCompositionNameRespTime), 1)"},
+		{"AvgFunDurationTime", "sum(Function_duration_seconds_sum) by (functNameDuration) / sum(Function_duration_seconds_count) by (functNameDuration)"},
+		{"AvgOutputFunSize", "sum(FunctionOutput_size_seconds_sum) by (functNameOutputSize) / sum(FunctionOutput_size_seconds_count) by (functNameOutputSize)"},
+		{"AvgFunInitTime", "sum(Function_initTime_seconds_sum) by (functNameInitTime) / sum(Function_initTime_seconds_count) by (functNameInitTime)"},
 	}
 	//ticker := time.NewTicker(20 * time.Second)
 	//defer ticker.Stop()
