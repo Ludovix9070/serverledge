@@ -8,12 +8,20 @@ import (
 	"github.com/grussorusso/serverledge/internal/config"
 )
 
-var terms = PolicyTerms{
+/*var terms = PolicyTerms{
 	AvgTotalColdStartsTime: false,
 	AvgFcRespTime:          false,
 	AvgFunDurationTime:     true,
 	AvgOutputFunSize:       true,
 	AvgFunInitTime:         true,
+}*/
+
+var policyDef = policyDefinition{
+	AvgTotalColdStartsTime: []policyElem{{isAct: true, threshold: 2.0}},
+	AvgFcRespTime:          []policyElem{{isAct: false, threshold: 1.5}},
+	AvgFunDurationTime:     []policyElem{{isAct: true, threshold: 5.0}},
+	AvgOutputFunSize:       []policyElem{{isAct: true, threshold: 100.0}},
+	AvgFunInitTime:         []policyElem{{isAct: true, threshold: 2.0}},
 }
 
 type EvaluateFusionPolicy struct {
@@ -44,6 +52,6 @@ func (p *EvaluateFusionPolicy) OnArrival(fr *fusionRequest) {
 		saveInfos(*info)
 		fusionDecide()
 	}*/
-	fusionEvaluate(fr, terms)
+	fusionEvaluate(fr, policyDef)
 
 }

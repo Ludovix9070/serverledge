@@ -9,19 +9,20 @@ import (
 
 	"github.com/grussorusso/serverledge/internal/config"
 	"github.com/grussorusso/serverledge/internal/fc"
+	"github.com/grussorusso/serverledge/internal/function"
 	"github.com/grussorusso/serverledge/internal/node"
 )
 
-var metricInfos chan *ReturnedOutputData
+var metricInfos chan *returnedOutputData
 
 // var fusionInvocationChannel chan *fc.FunctionComposition
 var fusionInvocationChannel chan *fusionRequest
-var dataMap map[time.Time]ReturnedOutputData
+var dataMap map[time.Time]returnedOutputData
 
 func Run(p FusionPolicy) {
-	metricInfos = make(chan *ReturnedOutputData, 500)
+	metricInfos = make(chan *returnedOutputData, 500)
 	fusionInvocationChannel = make(chan *fusionRequest, 500)
-	dataMap = make(map[time.Time]ReturnedOutputData)
+	dataMap = make(map[time.Time]returnedOutputData)
 
 	// initialize Resources
 	//forse info saranno utili nel corso della vita del componente di fusione
@@ -50,7 +51,7 @@ func Run(p FusionPolicy) {
 
 }
 
-func SubmitInfos(data ReturnedOutputData) error {
+func SubmitInfos(data returnedOutputData) error {
 	metricInfos <- &data // send infos
 
 	return nil
@@ -65,7 +66,7 @@ func SubmitFusionRequest(fc *fc.FunctionComposition) error {
 	//QUI DEVO USARE LE METRICHE PER VALUTARE IL DAG
 
 	fusionRequest := fusionRequest{
-		Composition:   fc,
+		composition:   fc,
 		returnChannel: make(chan fusionResult, 1)}
 	fusionInvocationChannel <- &fusionRequest // send request
 
@@ -103,22 +104,22 @@ func fusionSingleFcDecide(fr *fusionRequest) {
 	//for all the fc? TODO
 	//dataMap[infos.Timestamp] = infos
 	//Dummy
-	fmt.Println("FUSE COMMAND with Default/Alwaysfuse policy for composition ", fr.Composition.Name)
+	fmt.Println("FUSE COMMAND with Default/Alwaysfuse policy for composition ", fr.composition.Name)
 	condition := true //MUST be determined by an appropriate policy analyzing the report
 	if condition {
 		for key := range dataMap {
 			fmt.Println("------------------------------------------")
 			fmt.Println("Timestamp Key: ", key)
-			fmt.Println("Metrics: ", dataMap[key].ReturnedInfos)
+			fmt.Println("Metrics: ", dataMap[key].returnedInfos)
 			fmt.Println("------------------------------------------")
 		}
 		fmt.Println("")
 
-		ok, _ := FuseFc(fr.Composition)
+		ok, _ := FuseFc(fr.composition)
 		if !ok {
 			fr.returnChannel <- fusionResult{action: NOOP}
 		} else {
-			fmt.Println("new functions vector is ", fr.Composition.Functions)
+			fmt.Println("new functions vector is ", fr.composition.Functions)
 			fr.returnChannel <- fusionResult{action: FUSED}
 		}
 	} else {
@@ -128,22 +129,22 @@ func fusionSingleFcDecide(fr *fusionRequest) {
 
 }
 
-func fusionEvaluate(fr *fusionRequest, activeTerms PolicyTerms) {
+func fusionEvaluate(fr *fusionRequest, policyDef policyDefinition) {
 	//saveInfos
 	//for all the fc? TODO
 	//dataMap[infos.Timestamp] = infos
 	//Dummy
-	fmt.Println("FUSE COMMAND with Evaluate Policy for composition ", fr.Composition.Name)
+	fmt.Println("FUSE COMMAND with Evaluate Policy for composition ", fr.composition.Name)
 	for key := range dataMap {
 		fmt.Println("------------------------------------------")
 		fmt.Println("Timestamp Key: ", key)
-		fmt.Println("Metrics: ", dataMap[key].ReturnedInfos)
+		fmt.Println("Metrics: ", dataMap[key].returnedInfos)
 		fmt.Println("------------------------------------------")
 	}
 	fmt.Println("")
 
 	var latestTime time.Time
-	var latestData ReturnedOutputData
+	var latestData returnedOutputData
 
 	for timestamp, data := range dataMap {
 		if timestamp.After(latestTime) {
@@ -153,47 +154,26 @@ func fusionEvaluate(fr *fusionRequest, activeTerms PolicyTerms) {
 		}
 	}
 
+	otherWorkFunc, error := retrieveWorkflowsFunctions(fr.composition.Name)
+	if error != nil {
+		log.Println(error)
+		fr.returnChannel <- fusionResult{action: NOOP}
+	}
+
+	log.Println(otherWorkFunc)
+
 	/*for key := range fr.Composition.Functions {
 		fmt.Println("------------------------------------------")
-		fmt.Println("Function: ", fr.Composition.Functions[key])
+		fmt.Println("Function: ", fr.Composition.Functions[key].Name)
 		fmt.Println("------------------------------------------")
-		v := reflect.ValueOf(latestData.ReturnedInfos)
-		t := reflect.TypeOf(latestData.ReturnedInfos)
 
-		//sto ciclando sui campi di QueryInformations
-		for i := 0; i < v.NumField(); i++ {
-			fieldName := t.Field(i).Name // Nome del campo es.AvgFcRespTime
-			fieldValue := v.Field(i)     // Valore del campo
-
-			if fieldValue.Kind() == reflect.Map {
-				fmt.Printf("Campo: %s\n", fieldName)
-
-				// Controlla se la mappa non è nil
-				if !fieldValue.IsNil() {
-					// Controlla se esiste la chiave nella mappa
-					mapValue := fieldValue.MapIndex(reflect.ValueOf(key))
-					if mapValue.IsValid() {
-						fmt.Printf("  Chiave '%s' trovata, Valore: %v\n", key, mapValue)
-					} else {
-						fmt.Printf("  Chiave '%s' non trovata\n", key)
-					}
-				} else {
-					fmt.Printf("  La mappa è nil\n")
-				}
-			} else {
-				fmt.Printf("Campo %s non è una mappa\n", fieldName)
-			}
+		if contains(otherWorkFunc, fr.Composition.Functions[key].Name) {
+			//da non fondere, ma per ora la fondo
+			fmt.Printf("Funzione %s già usata in un altro workflow", fr.Composition.Functions[key].Name)
 		}
 
-	}*/
-
-	for key := range fr.Composition.Functions {
-		fmt.Println("------------------------------------------")
-		fmt.Println("Function: ", fr.Composition.Functions[key])
-		fmt.Println("------------------------------------------")
-
-		v := reflect.ValueOf(latestData.ReturnedInfos)
-		t := reflect.TypeOf(latestData.ReturnedInfos)
+		v := reflect.ValueOf(latestData.returnedInfos)
+		t := reflect.TypeOf(latestData.returnedInfos)
 
 		// Uso la reflection per iterare sui campi di QueryInformations
 		activeTermsValue := reflect.ValueOf(activeTerms) // Reflection su activeTerms
@@ -215,6 +195,7 @@ func fusionEvaluate(fr *fusionRequest, activeTerms PolicyTerms) {
 						// Controlla se esiste la chiave nella mappa
 						mapValue := fieldValue.MapIndex(reflect.ValueOf(key))
 						if mapValue.IsValid() {
+							//ho il valore per la metrica attiva in activeTerms per la funzione in esame
 							fmt.Printf("  Chiave '%s' trovata, Valore: %v\n", key, mapValue)
 						} else {
 							fmt.Printf("  Chiave '%s' non trovata\n", key)
@@ -229,15 +210,82 @@ func fusionEvaluate(fr *fusionRequest, activeTerms PolicyTerms) {
 				fmt.Printf("Campo '%s' non è attivo in activeTerms\n", fieldName)
 			}
 		}
+	}*/
+
+	for key := range fr.composition.Functions {
+		fmt.Println("------------------------------------------")
+		fmt.Println("Function: ", fr.composition.Functions[key].Name)
+		fmt.Println("------------------------------------------")
+
+		// Controlla se la funzione è già usata in un altro workflow
+		if contains(otherWorkFunc, fr.composition.Functions[key].Name) {
+			fmt.Printf("Funzione %s già usata in un altro workflow\n", fr.composition.Functions[key].Name)
+		}
+
+		v := reflect.ValueOf(latestData.returnedInfos)
+		t := reflect.TypeOf(latestData.returnedInfos)
+
+		// Uso la reflection per iterare sui campi di QueryInformations
+		policyDefValue := reflect.ValueOf(policyDef) // Reflection su PolicyDefinition
+
+		for i := 0; i < v.NumField(); i++ {
+			fieldName := t.Field(i).Name // Nome del campo (es. AvgFcRespTime)
+			fieldValue := v.Field(i)     // Valore del campo
+
+			// Usa reflection per ottenere il campo corrispondente in PolicyDefinition
+			policyField := policyDefValue.FieldByName(fieldName)
+			if policyField.IsValid() && policyField.Kind() == reflect.Slice {
+				// Itera su tutti gli elementi della slice ([]PolicyElem)
+				for j := 0; j < policyField.Len(); j++ {
+					policyElem := policyField.Index(j).Interface().(policyElem) // Elemento corrente
+
+					if policyElem.isAct { // Controlla se il campo è attivo
+						fmt.Printf("Campo '%s' è attivo con soglia: %f\n", fieldName, policyElem.threshold)
+
+						if fieldValue.Kind() == reflect.Map {
+							fmt.Printf("Campo: %s\n", fieldName)
+
+							// Controlla se la mappa non è nil
+							if !fieldValue.IsNil() {
+								// Controlla se esiste la chiave nella mappa
+								mapValue := fieldValue.MapIndex(reflect.ValueOf(key))
+								if mapValue.IsValid() {
+									// Ottieni il valore per la metrica
+									fmt.Printf("  Chiave '%s' trovata, Valore: %v\n", key, mapValue)
+
+									// Confronta il valore della metrica con la soglia
+									metricValue := mapValue.Float() // Assumendo che sia float64
+									if metricValue > policyElem.threshold {
+										fmt.Printf("  Valore %v supera la soglia %f\n", metricValue, policyElem.threshold)
+									} else {
+										fmt.Printf("  Valore %v non supera la soglia %f\n", metricValue, policyElem.threshold)
+									}
+								} else {
+									fmt.Printf("  Chiave '%s' non trovata\n", key)
+								}
+							} else {
+								fmt.Printf("  La mappa è nil\n")
+							}
+						} else {
+							fmt.Printf("Campo %s non è una mappa\n", fieldName)
+						}
+					} else {
+						fmt.Printf("Campo '%s' non è attivo in questo elemento di PolicyDefinition\n", fieldName)
+					}
+				}
+			} else {
+				fmt.Printf("Campo '%s' non trovato in PolicyDefinition o non è una slice\n", fieldName)
+			}
+		}
 	}
 
 	condition := true //MUST be determined by an appropriate policy analyzing the report
 	if condition {
-		ok, _ := FuseFc(fr.Composition)
+		ok, _ := FuseFc(fr.composition)
 		if !ok {
 			fr.returnChannel <- fusionResult{action: NOOP}
 		} else {
-			fmt.Println("new functions vector is ", fr.Composition.Functions)
+			fmt.Println("new functions vector is ", fr.composition.Functions)
 			fr.returnChannel <- fusionResult{action: FUSED}
 		}
 	} else {
@@ -247,7 +295,51 @@ func fusionEvaluate(fr *fusionRequest, activeTerms PolicyTerms) {
 
 }
 
-func saveInfos(infos ReturnedOutputData) {
+func saveInfos(infos returnedOutputData) {
 	//saveInfos
-	dataMap[infos.Timestamp] = infos
+	dataMap[infos.timestamp] = infos
+}
+
+func contains(slice []string, str string) bool {
+	for _, item := range slice {
+		if item == str {
+			return true
+		}
+	}
+	return false
+}
+
+func retrieveWorkflowsFunctions(currentWorkFlow string) ([]string, error) {
+	//saveInfos
+	workflows, error := function.GetAllWithPrefix("/fc")
+	if error != nil {
+		return nil, fmt.Errorf("Retrieving workflows error")
+	}
+
+	uniqueFunctions := make(map[string]struct{})
+
+	for _, s := range workflows {
+		fmt.Printf("Workflow: %s\n", s)
+		if s == currentWorkFlow {
+			log.Println("Non analizzare funzioni del workflow corrente")
+			continue
+		}
+		funComp, ok := fc.GetFC(s)
+		if !ok {
+			return nil, fmt.Errorf("Dropping request for unknown FC '%s'", s)
+		}
+
+		// Itera sulle funzioni della composizione
+		for funcName := range funComp.Functions {
+			// Aggiungi il nome della funzione alla mappa
+			uniqueFunctions[funcName] = struct{}{}
+		}
+	}
+
+	var result []string
+	for funcName := range uniqueFunctions {
+		result = append(result, funcName)
+	}
+
+	return result, nil
 }

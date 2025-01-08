@@ -6,12 +6,12 @@ import (
 	"github.com/grussorusso/serverledge/internal/fc"
 )
 
-type ReturnedOutputData struct {
-	ReturnedInfos QueryInformations
-	Timestamp     time.Time
+type returnedOutputData struct {
+	returnedInfos queryInformations
+	timestamp     time.Time
 }
 
-type QueryInformations struct {
+type queryInformations struct {
 	AvgTotalColdStartsTime map[string]float64
 	AvgFcRespTime          map[string]float64
 	AvgFunDurationTime     map[string]float64
@@ -19,12 +19,26 @@ type QueryInformations struct {
 	AvgFunInitTime         map[string]float64
 }
 
+/*
 type PolicyTerms struct {
-	AvgTotalColdStartsTime bool
-	AvgFcRespTime          bool
-	AvgFunDurationTime     bool
-	AvgOutputFunSize       bool
-	AvgFunInitTime         bool
+	avgTotalColdStartsTime bool
+	avgFcRespTime          bool
+	avgFunDurationTime     bool
+	avgOutputFunSize       bool
+	avgFunInitTime         bool
+}*/
+
+type policyDefinition struct {
+	AvgTotalColdStartsTime []policyElem
+	AvgFcRespTime          []policyElem
+	AvgFunDurationTime     []policyElem
+	AvgOutputFunSize       []policyElem
+	AvgFunInitTime         []policyElem
+}
+
+type policyElem struct {
+	isAct     bool
+	threshold float64
 }
 
 /*type PolicyEvaluatedData struct {
@@ -38,7 +52,7 @@ type PolicyTerms struct {
 
 // struttura contenente le informazioni necessarie per la fusione prese dopo una esecuzione
 type fusionRequest struct {
-	Composition   *fc.FunctionComposition
+	composition   *fc.FunctionComposition
 	returnChannel chan fusionResult
 }
 

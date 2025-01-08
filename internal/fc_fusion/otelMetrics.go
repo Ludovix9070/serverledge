@@ -17,9 +17,9 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-var metricsInfos chan *ReturnedOutputData
+var metricsInfos chan *returnedOutputData
 var QueryStarter chan string
-var dataToSend ReturnedOutputData
+var dataToSend returnedOutputData
 
 // Struct to represent query with its id
 type queryInfos struct {
@@ -44,15 +44,15 @@ func queryPrometheus(wg *sync.WaitGroup, queryInfos queryInfos, api v1.API, ctx 
 
 	switch queryInfos.id {
 	case "AvgTotalColdStartsTime":
-		dataToSend.ReturnedInfos.AvgTotalColdStartsTime = outputMap
+		dataToSend.returnedInfos.AvgTotalColdStartsTime = outputMap
 	case "AvgFcRespTime":
-		dataToSend.ReturnedInfos.AvgFcRespTime = outputMap
+		dataToSend.returnedInfos.AvgFcRespTime = outputMap
 	case "AvgFunDurationTime":
-		dataToSend.ReturnedInfos.AvgFunDurationTime = outputMap
+		dataToSend.returnedInfos.AvgFunDurationTime = outputMap
 	case "AvgOutputFunSize":
-		dataToSend.ReturnedInfos.AvgOutputFunSize = outputMap
+		dataToSend.returnedInfos.AvgOutputFunSize = outputMap
 	case "AvgFunInitTime":
-		dataToSend.ReturnedInfos.AvgFunInitTime = outputMap
+		dataToSend.returnedInfos.AvgFunInitTime = outputMap
 	}
 
 }
@@ -151,7 +151,7 @@ func PeriodicalMetricsRetrieveFromPrometheus() {
 
 			wg.Wait()
 			fmt.Println("All queries completed")
-			dataToSend.Timestamp = time.Now()
+			dataToSend.timestamp = time.Now()
 			SubmitInfos(dataToSend)
 		}
 	}
