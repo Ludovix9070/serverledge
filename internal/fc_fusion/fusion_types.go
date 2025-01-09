@@ -36,9 +36,23 @@ type policyDefinition struct {
 	AvgFunInitTime         []policyElem
 }
 
+type policyDefinitionTerms struct {
+	MaxFuncDuration policyElem
+	MaxDimPkt       policyElem
+	DurInit         policyElem
+	MaxMemoryDelta  policyElem
+	MaxCpuDelta     policyElem
+	BlockSharedFunc policyElem
+}
+
 type policyElem struct {
 	isAct     bool
 	threshold float64
+}
+
+type functionElem struct {
+	name       string
+	canBeFused bool
 }
 
 /*type PolicyEvaluatedData struct {

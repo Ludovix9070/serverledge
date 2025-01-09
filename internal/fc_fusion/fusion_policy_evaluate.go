@@ -16,12 +16,21 @@ import (
 	AvgFunInitTime:         true,
 }*/
 
-var policyDef = policyDefinition{
+/*var policyDef = policyDefinition{
 	AvgTotalColdStartsTime: []policyElem{{isAct: true, threshold: 2.0}},
 	AvgFcRespTime:          []policyElem{{isAct: false, threshold: 1.5}},
 	AvgFunDurationTime:     []policyElem{{isAct: true, threshold: 5.0}},
 	AvgOutputFunSize:       []policyElem{{isAct: true, threshold: 100.0}},
 	AvgFunInitTime:         []policyElem{{isAct: true, threshold: 2.0}},
+}*/
+
+var policyDefs = policyDefinitionTerms{
+	MaxFuncDuration: policyElem{isAct: true, threshold: 2.0},   //pre
+	MaxDimPkt:       policyElem{isAct: true, threshold: 1.5},   //post
+	DurInit:         policyElem{isAct: true, threshold: 0.5},   //pre
+	MaxMemoryDelta:  policyElem{isAct: true, threshold: 100.0}, //post
+	MaxCpuDelta:     policyElem{isAct: true, threshold: 300.0}, //post
+	BlockSharedFunc: policyElem{isAct: true, threshold: 2.0},   //pre
 }
 
 type EvaluateFusionPolicy struct {
@@ -52,6 +61,6 @@ func (p *EvaluateFusionPolicy) OnArrival(fr *fusionRequest) {
 		saveInfos(*info)
 		fusionDecide()
 	}*/
-	fusionEvaluate(fr, policyDef)
+	fusionEvaluate(fr, policyDefs)
 
 }
