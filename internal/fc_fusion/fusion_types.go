@@ -19,32 +19,17 @@ type queryInformations struct {
 	AvgFunInitTime         map[string]float64
 }
 
-/*
-type PolicyTerms struct {
-	avgTotalColdStartsTime bool
-	avgFcRespTime          bool
-	avgFunDurationTime     bool
-	avgOutputFunSize       bool
-	avgFunInitTime         bool
-}*/
-
-type policyDefinition struct {
-	AvgTotalColdStartsTime []policyElem
-	AvgFcRespTime          []policyElem
-	AvgFunDurationTime     []policyElem
-	AvgOutputFunSize       []policyElem
-	AvgFunInitTime         []policyElem
-}
-
+// struct che contiene i termini della policy
 type policyDefinitionTerms struct {
-	MaxFuncDuration policyElem
-	MaxDimPkt       policyElem
-	DurInit         policyElem
-	MaxMemoryDelta  policyElem
-	MaxCpuDelta     policyElem
-	BlockSharedFunc policyElem
+	MaxFuncDuration policyElem //pre
+	MaxDimPkt       policyElem //post
+	DurInit         policyElem //pre
+	MaxMemoryDelta  policyElem //post
+	MaxCpuDelta     policyElem //post
+	BlockSharedFunc policyElem //pre
 }
 
+// ogni elemento della policy può essere attivo/non attivo e con la rispettiva threshold
 type policyElem struct {
 	isAct     bool
 	threshold float64
@@ -54,15 +39,6 @@ type functionElem struct {
 	name       string
 	canBeFused bool
 }
-
-/*type PolicyEvaluatedData struct {
-	ReturnedInfos QueryInformations
-	Act     bool
-}
-
-type PolicyTerms struct {
-	ActivatedTerms map[string]PolicyEvaluatedData
-}*/
 
 // struttura contenente le informazioni necessarie per la fusione prese dopo una esecuzione
 type fusionRequest struct {

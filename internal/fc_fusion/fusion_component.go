@@ -375,7 +375,7 @@ func fusionEvaluate(fr *fusionRequest, policyDef policyDefinitionTerms) {
 
 	condition := true //MUST be determined by an appropriate policy analyzing the report
 	if condition {
-		ok, _ := FuseFc(fr.composition)
+		ok, _ := FuseFcEvaluate(fr.composition, policyDef, functionVector)
 		if !ok {
 			fr.returnChannel <- fusionResult{action: NOOP}
 		} else {

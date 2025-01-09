@@ -25,12 +25,12 @@ import (
 }*/
 
 var policyDefs = policyDefinitionTerms{
-	MaxFuncDuration: policyElem{isAct: true, threshold: 2.0},   //pre
-	MaxDimPkt:       policyElem{isAct: true, threshold: 1.5},   //post
-	DurInit:         policyElem{isAct: true, threshold: 0.5},   //pre
-	MaxMemoryDelta:  policyElem{isAct: true, threshold: 100.0}, //post
-	MaxCpuDelta:     policyElem{isAct: true, threshold: 300.0}, //post
-	BlockSharedFunc: policyElem{isAct: true, threshold: 2.0},   //pre
+	MaxFuncDuration: policyElem{isAct: true, threshold: 2.0},   //pre, threshold in sec
+	MaxDimPkt:       policyElem{isAct: true, threshold: 100.0}, //post, threshold in MB
+	DurInit:         policyElem{isAct: true, threshold: 0.5},   //pre, abs
+	MaxMemoryDelta:  policyElem{isAct: true, threshold: 100.0}, //post, threshold in MB
+	MaxCpuDelta:     policyElem{isAct: true, threshold: 2.0},   //post, threshold in #cores
+	BlockSharedFunc: policyElem{isAct: true, threshold: 0.0},   //pre,
 }
 
 type EvaluateFusionPolicy struct {
