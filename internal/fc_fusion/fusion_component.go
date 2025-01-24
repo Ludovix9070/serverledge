@@ -3,8 +3,10 @@ package fc_fusion
 import (
 	"fmt"
 	"log"
+	"math"
 	"reflect"
 	"runtime"
+	"sort"
 	"time"
 
 	"github.com/grussorusso/serverledge/internal/config"
@@ -130,10 +132,6 @@ func fusionSingleFcDecide(fr *fusionRequest) {
 }
 
 func fusionEvaluate(fr *fusionRequest, policyDef policyDefinitionTerms) {
-	//saveInfos
-	//for all the fc? TODO
-	//dataMap[infos.Timestamp] = infos
-	//Dummy
 	fmt.Println("FUSE COMMAND with Evaluate Policy for composition ", fr.composition.Name)
 	for key := range dataMap {
 		fmt.Println("------------------------------------------")
@@ -195,7 +193,7 @@ func fusionEvaluate(fr *fusionRequest, policyDef policyDefinitionTerms) {
 
 		for i := range functionVector {
 			if !functionVector[i].canBeFused {
-				// Salta la funzione se non può essere fusa
+				// Salto la funzione se non può essere fusa
 				fmt.Printf("Funzione '%s' già marcata come non fondibile. Salto controllo.\n", functionVector[i].name)
 				continue
 			}
@@ -203,32 +201,35 @@ func fusionEvaluate(fr *fusionRequest, policyDef policyDefinitionTerms) {
 			funcName := functionVector[i].name
 			fmt.Printf("Valutazione della funzione '%s'...\n", funcName)
 
-			fieldValue := v.FieldByName("AvgFunDurationTime") // Cerca AvgFunDurationTime
+			fieldValue := v.FieldByName("AvgFunDurationTime") // Cerco AvgFunDurationTime
 			if !fieldValue.IsValid() || fieldValue.Kind() != reflect.Map {
 				fmt.Println("Campo AvgFunDurationTime non trovato o non è una mappa.")
 				continue
 			}
 
-			// Controlla se la mappa non è nil
+			// Controllo se la mappa non è nil
 			if fieldValue.IsNil() {
 				fmt.Printf("Campo AvgFunDurationTime per funzione '%s' è nil.\n", funcName)
 				continue
 			}
 
-			// Cerca il valore nella mappa
+			// Cerco il valore nella mappa
 			mapValue := fieldValue.MapIndex(reflect.ValueOf(funcName))
 			if mapValue.IsValid() {
-				metricValue := mapValue.Float() // Assumi che il valore sia un float64
+				metricValue := mapValue.Float()
 				fmt.Printf("  Valore di AvgFunDurationTime per '%s': %f\n", funcName, metricValue)
 
-				// Confronta con la soglia
-				if metricValue > policyDef.MaxFuncDuration.threshold {
-					fmt.Printf("  Valore %f supera la soglia %f. Imposto canBeFused a false.\n", metricValue, policyDef.MaxFuncDuration.threshold)
-					functionVector[i].canBeFused = false // Imposta canBeFused a false
+				// Confronto con la threshold
+				thresh := calculateDurationThreshold(latestData.returnedInfos.AvgFunDurationTime, policyDef.MaxFuncDuration.threshold)
+				//if metricValue > policyDef.MaxFuncDuration.threshold[0] {
+				if metricValue > thresh {
+					fmt.Printf("  Valore %f supera la soglia %f. Imposto canBeFused a false.\n", metricValue, thresh)
+					functionVector[i].canBeFused = false // Imposto canBeFused a false
 				} else {
-					fmt.Printf("  Valore %f NON supera la soglia %f. Imposto canBeFused a true.\n", metricValue, policyDef.MaxFuncDuration.threshold)
-					functionVector[i].canBeFused = true // Imposta canBeFused a false
+					fmt.Printf("  Valore %f NON supera la soglia %f. Imposto canBeFused a true.\n", metricValue, thresh)
+					functionVector[i].canBeFused = true // Imposto canBeFused a false
 				}
+
 			} else {
 				fmt.Printf("  Nessun valore trovato per AvgFunDurationTime della funzione '%s'.\n", funcName)
 			}
@@ -245,7 +246,7 @@ func fusionEvaluate(fr *fusionRequest, policyDef policyDefinitionTerms) {
 
 		for i := range functionVector {
 			if !functionVector[i].canBeFused {
-				// Salta la funzione se non può essere fusa
+				// Salto la funzione se non può essere fusa
 				fmt.Printf("Funzione '%s' già marcata come non fondibile. Salto controllo.\n", functionVector[i].name)
 				continue
 			}
@@ -253,34 +254,34 @@ func fusionEvaluate(fr *fusionRequest, policyDef policyDefinitionTerms) {
 			funcName := functionVector[i].name
 			fmt.Printf("Valutazione della funzione '%s' per DurInit...\n", funcName)
 
-			// Cerca AvgFunDurationTime
+			// Cerco AvgFunDurationTime
 			durationField := v.FieldByName("AvgFunDurationTime")
 			if !durationField.IsValid() || durationField.Kind() != reflect.Map {
 				fmt.Println("Campo AvgFunDurationTime non trovato o non è una mappa.")
 				continue
 			}
 
-			// Cerca AvgFunInitTime
+			// Cerco AvgFunInitTime
 			initField := v.FieldByName("AvgFunInitTime")
 			if !initField.IsValid() || initField.Kind() != reflect.Map {
 				fmt.Println("Campo AvgFunInitTime non trovato o non è una mappa.")
 				continue
 			}
 
-			// Controlla se le mappe non sono nil
+			// Controllo se le mappe non sono nil
 			if durationField.IsNil() || initField.IsNil() {
 				fmt.Printf("Campo AvgFunDurationTime o AvgFunInitTime è nil per funzione '%s'.\n", funcName)
 				continue
 			}
 
-			// Cerca i valori delle metriche per la funzione
+			// Cerco i valori delle metriche per la funzione
 			durationValue := durationField.MapIndex(reflect.ValueOf(funcName))
 			initValue := initField.MapIndex(reflect.ValueOf(funcName))
 
 			if durationValue.IsValid() && initValue.IsValid() {
-				// Calcola il rapporto
-				durationMetric := durationValue.Float() // Assumi che il valore sia float64
-				initMetric := initValue.Float()         // Assumi che il valore sia float64
+				// Calcolo il rapporto
+				durationMetric := durationValue.Float()
+				initMetric := initValue.Float()
 
 				if initMetric == 0 {
 					fmt.Printf("  Inizializzazione (AvgFunInitTime) per '%s' è 0, impossibile calcolare il rapporto.\n", funcName)
@@ -291,7 +292,7 @@ func fusionEvaluate(fr *fusionRequest, policyDef policyDefinitionTerms) {
 				fmt.Printf("  Rapporto AvgFunDurationTime/AvgFunInitTime per '%s': %f\n", funcName, ratio)
 
 				// Confronta il rapporto con la soglia
-				if ratio > policyDef.DurInit.threshold {
+				if ratio > policyDef.DurInit.threshold[0] {
 					fmt.Printf("  Rapporto %f supera la soglia %f. Imposto canBeFused a false.\n", ratio, policyDef.DurInit.threshold)
 					functionVector[i].canBeFused = false // Imposta canBeFused a false
 				} else {
@@ -306,74 +307,15 @@ func fusionEvaluate(fr *fusionRequest, policyDef policyDefinitionTerms) {
 
 	fmt.Println(functionVector)
 
-	/*for key := range fr.composition.Functions {
-		fmt.Println("------------------------------------------")
-		fmt.Println("Function: ", fr.composition.Functions[key].Name)
-		fmt.Println("------------------------------------------")
-
-		// Controlla se la funzione è già usata in un altro workflow
-		if contains(otherWorkFunc, fr.composition.Functions[key].Name) {
-			fmt.Printf("Funzione %s già usata in un altro workflow\n", fr.composition.Functions[key].Name)
+	condition := false
+	//se tutte le funzioni nel workflow non fondibili, evito controlli post sulla fusibilità
+	for _, v := range functionVector {
+		if v.canBeFused {
+			condition = true
+			break
 		}
+	}
 
-		v := reflect.ValueOf(latestData.returnedInfos)
-		t := reflect.TypeOf(latestData.returnedInfos)
-
-		// Uso la reflection per iterare sui campi di QueryInformations
-		policyDefValue := reflect.ValueOf(policyDef) // Reflection su PolicyDefinition
-
-		for i := 0; i < v.NumField(); i++ {
-			fieldName := t.Field(i).Name // Nome del campo (es. AvgFcRespTime)
-			fieldValue := v.Field(i)     // Valore del campo
-
-			// Usa reflection per ottenere il campo corrispondente in PolicyDefinition
-			policyField := policyDefValue.FieldByName(fieldName)
-			if policyField.IsValid() && policyField.Kind() == reflect.Slice {
-				// Itera su tutti gli elementi della slice ([]PolicyElem)
-				for j := 0; j < policyField.Len(); j++ {
-					policyElem := policyField.Index(j).Interface().(policyElem) // Elemento corrente
-
-					if policyElem.isAct { // Controlla se il campo è attivo
-						fmt.Printf("Campo '%s' è attivo con soglia: %f\n", fieldName, policyElem.threshold)
-
-						if fieldValue.Kind() == reflect.Map {
-							fmt.Printf("Campo: %s\n", fieldName)
-
-							// Controlla se la mappa non è nil
-							if !fieldValue.IsNil() {
-								// Controlla se esiste la chiave nella mappa
-								mapValue := fieldValue.MapIndex(reflect.ValueOf(key))
-								if mapValue.IsValid() {
-									// Ottieni il valore per la metrica
-									fmt.Printf("  Chiave '%s' trovata, Valore: %v\n", key, mapValue)
-
-									// Confronta il valore della metrica con la soglia
-									metricValue := mapValue.Float() // Assumendo che sia float64
-									if metricValue > policyElem.threshold {
-										fmt.Printf("  Valore %v supera la soglia %f\n", metricValue, policyElem.threshold)
-									} else {
-										fmt.Printf("  Valore %v non supera la soglia %f\n", metricValue, policyElem.threshold)
-									}
-								} else {
-									fmt.Printf("  Chiave '%s' non trovata\n", key)
-								}
-							} else {
-								fmt.Printf("  La mappa è nil\n")
-							}
-						} else {
-							fmt.Printf("Campo %s non è una mappa\n", fieldName)
-						}
-					} else {
-						fmt.Printf("Campo '%s' non è attivo in questo elemento di PolicyDefinition\n", fieldName)
-					}
-				}
-			} else {
-				fmt.Printf("Campo '%s' non trovato in PolicyDefinition o non è una slice\n", fieldName)
-			}
-		}
-	}*/
-
-	condition := true //MUST be determined by an appropriate policy analyzing the report
 	if condition {
 		ok, _ := FuseFcEvaluate(fr.composition, policyDef, functionVector)
 		if !ok {
@@ -436,4 +378,71 @@ func retrieveWorkflowsFunctions(currentWorkFlow string) ([]string, error) {
 	}
 
 	return result, nil
+}
+
+func calculateDurationThreshold(vectorInfo map[string]float64, weights []float64) float64 {
+	values := make([]float64, 0, len(vectorInfo))
+	for _, v := range vectorInfo {
+		values = append(values, v)
+	}
+
+	fmt.Println(values)
+
+	mean := calculateMean(values)
+	stdDev := calculateStdDev(values, mean)
+	percentile90 := calculatePercentile(values, 90.0)
+
+	k := 2.0 // Fattore per pesare la deviazione standard
+	stdDevLength := stdDevToLength(mean, stdDev, k)
+
+	// Definisci i pesi
+	//weights := [3]float64{0.4, 0.3, 0.3}
+
+	// Calcola la soglia combinata
+	threshold := calculateWeightedThreshold(mean, stdDevLength, percentile90, weights)
+
+	// Stampa i risultati
+	fmt.Printf("Media: %f\n", mean)
+	fmt.Printf("Deviazione standard sommata a media con k %f: %f\n", k, stdDevLength)
+	fmt.Printf("90° percentile: %f\n", percentile90)
+	fmt.Printf("Threshold combinata: %f\n", threshold)
+
+	return threshold
+}
+
+// Funzione per calcolare media
+func calculateMean(values []float64) float64 {
+	sum := 0.0
+	for _, v := range values {
+		sum += v
+	}
+
+	return sum / float64(len(values))
+}
+
+// Funzione per calcolare deviazione standard
+func calculateStdDev(values []float64, mean float64) float64 {
+	var varianceSum float64
+	for _, v := range values {
+		varianceSum += math.Pow(v-mean, 2)
+	}
+	variance := varianceSum / float64(len(values))
+	return math.Sqrt(variance)
+}
+
+// Funzione per trasformare deviazione standard in una misura di lunghezza
+func stdDevToLength(mean, stdDev, factor float64) float64 {
+	return mean + factor*stdDev // Trasforma la deviazione standard in una lunghezza
+}
+
+// Funzione per calcolare il 90° percentile
+func calculatePercentile(values []float64, percentile float64) float64 {
+	sort.Float64s(values) // Ordina i valori
+	index := int(math.Ceil(percentile/100*float64(len(values)))) - 1
+	return values[index]
+}
+
+// Funzione per combinare media, deviazione standard e 90° percentile con pesi
+func calculateWeightedThreshold(mean, stdDev, percentile90 float64, weights []float64) float64 {
+	return weights[0]*mean + weights[1]*stdDev + weights[2]*percentile90
 }

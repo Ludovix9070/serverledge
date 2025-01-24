@@ -32,7 +32,7 @@ type policyDefinitionTerms struct {
 // ogni elemento della policy può essere attivo/non attivo e con la rispettiva threshold
 type policyElem struct {
 	isAct     bool
-	threshold float64
+	threshold []float64
 }
 
 type functionElem struct {

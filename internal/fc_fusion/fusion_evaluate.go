@@ -124,27 +124,29 @@ func FuseFcEvaluate(fcomp *fc.FunctionComposition, policyDef policyDefinitionTer
 
 						if policyDef.MaxCpuDelta.isAct {
 							cpuDelta := math.Abs(func1.CPUDemand - func2.CPUDemand)
-							if cpuDelta > policyDef.MaxCpuDelta.threshold {
+							cpuEstDelta := policyDef.MaxCpuDelta.threshold[0] * MaxFloat64(func1.CPUDemand, func2.CPUDemand)
+							if cpuDelta > cpuEstDelta {
 								fmt.Printf("  CpuDelta %f supera la soglia di CpuDemand %f. Le due funzioni non possono essere fuse.\n", cpuDelta, policyDef.MaxCpuDelta.threshold)
 								for _, nextNodeId := range simpleNode.GetNext() {
 									nodeQueue = append(nodeQueue, QueueNode{NodeID: nextNodeId, IsFusible: false, Evaluated: false})
 								}
 								continue
 							} else {
-								fmt.Println("Passed Max Cpu Delta Policy Check")
+								fmt.Printf("\nPassed Max Cpu Delta Policy Check with Cpu est Delta %f Cpu Real delta %f Fun1 Delta %f", cpuEstDelta, cpuDelta, func1.CPUDemand)
 							}
 						}
 
 						if policyDef.MaxMemoryDelta.isAct {
 							memDelta := math.Abs(float64(func1.MemoryMB) - float64(func2.MemoryMB))
-							if memDelta > policyDef.MaxMemoryDelta.threshold {
+							memEstDelta := policyDef.MaxMemoryDelta.threshold[0] * float64(MaxInt64(func1.MemoryMB, func2.MemoryMB))
+							if memDelta > memEstDelta {
 								fmt.Printf("  MemDelta %f supera la soglia di MaxMemDelta %f. Le due funzioni non possono essere fuse.\n", memDelta, policyDef.MaxMemoryDelta.threshold)
 								for _, nextNodeId := range simpleNode.GetNext() {
 									nodeQueue = append(nodeQueue, QueueNode{NodeID: nextNodeId, IsFusible: false, Evaluated: false})
 								}
 								continue
 							} else {
-								fmt.Println("Passed Max Memory Delta Policy Check")
+								fmt.Printf("\nPassed Max Memory Delta Policy Check wit Mem Est Delta %f e max %f\n", memEstDelta, float64(func1.MemoryMB))
 							}
 						}
 
@@ -153,7 +155,7 @@ func FuseFcEvaluate(fcomp *fc.FunctionComposition, policyDef policyDefinitionTer
 							tarBytesFunc2, _ := base64.StdEncoding.DecodeString(func2.TarFunctionCode)
 							maxApproxDim := bytesToMB(len(tarBytesFunc1) + len(tarBytesFunc2))
 							fmt.Printf("Dim Combinata Pkt %f\n", maxApproxDim)
-							if maxApproxDim > policyDef.MaxDimPkt.threshold {
+							if maxApproxDim > policyDef.MaxDimPkt.threshold[0] {
 								fmt.Printf("  Dim Pkt Finale %f supera la soglia di MaxDimPkt %f. Le due funzioni non possono essere fuse.\n", maxApproxDim, policyDef.MaxDimPkt.threshold)
 								for _, nextNodeId := range simpleNode.GetNext() {
 									nodeQueue = append(nodeQueue, QueueNode{NodeID: nextNodeId, IsFusible: false, Evaluated: false})
