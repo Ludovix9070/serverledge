@@ -189,7 +189,7 @@ func fusionEvaluate(fr *fusionRequest, policyDef policyDefinitionTerms) {
 
 	//se le funzioni da valutare hanno già una durata molto ampia, non fondo
 	if policyDef.MaxFuncDuration.isAct {
-		fmt.Println("MaxFuncDuration è attivo. Confronto con threshold:", policyDef.MaxFuncDuration.threshold)
+		fmt.Println("MaxFuncDuration è attivo. Confronto con threshold:", policyDef.MaxFuncDuration.threshold[0])
 
 		v := reflect.ValueOf(latestData.returnedInfos) // Valori delle metriche
 		//t := reflect.TypeOf(latestData.returnedInfos)  // Tipo delle metriche
@@ -223,7 +223,8 @@ func fusionEvaluate(fr *fusionRequest, policyDef policyDefinitionTerms) {
 				fmt.Printf("  Valore di AvgFunDurationTime per '%s': %f\n", funcName, metricValue)
 
 				// Confronto con la threshold
-				thresh := calculateDurationThreshold(latestData.returnedInfos.AvgFunDurationTime, policyDef.MaxFuncDuration.threshold)
+				//thresh := calculateDurationThreshold(latestData.returnedInfos.AvgFunDurationTime, policyDef.MaxFuncDuration.threshold)
+				thresh := policyDef.MaxFuncDuration.threshold[0]
 				//if metricValue > policyDef.MaxFuncDuration.threshold[0] {
 				if metricValue > thresh {
 					fmt.Printf("  Valore %f supera la soglia %f. Imposto canBeFused a false.\n", metricValue, thresh)

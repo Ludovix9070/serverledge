@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"reflect"
+	"time"
 
 	"github.com/grussorusso/serverledge/internal/fc"
 	"github.com/grussorusso/serverledge/internal/function"
@@ -179,6 +181,76 @@ func FuseFcEvaluate(fcomp *fc.FunctionComposition, policyDef policyDefinitionTer
 								nodeQueue = append(nodeQueue, QueueNode{NodeID: nextNodeId, IsFusible: false, Evaluated: false})
 							}
 							continue
+						}
+
+						if policyDef.MaxFuncDuration.isAct {
+							var latestTime time.Time
+							var latestData returnedOutputData
+							for timestamp, data := range dataMap {
+								if timestamp.After(latestTime) {
+									latestTime = timestamp
+									latestData = data
+									//fmt.Println(latestData)
+								}
+							}
+							fmt.Println("MaxFuncDuration è attivo. Confronto con threshold:", policyDef.MaxFuncDuration.threshold[0])
+
+							v := reflect.ValueOf(latestData.returnedInfos) // Valori delle metriche
+							//t := reflect.TypeOf(latestData.returnedInfos)  // Tipo delle metriche
+
+							funcName1 := func1.Name
+							funcName2 := func2.Name
+							fmt.Printf("\nValutazione estimated duration delle funzioni '%s' e '%s'...\n", funcName1, funcName2)
+
+							fieldValue := v.FieldByName("AvgFunDurationTime") // Cerco AvgFunDurationTime
+							if !fieldValue.IsValid() || fieldValue.Kind() != reflect.Map {
+								fmt.Println("Campo AvgFunDurationTime non trovato o non è una mappa.")
+								for _, nextNodeId := range simpleNode.GetNext() {
+									nodeQueue = append(nodeQueue, QueueNode{NodeID: nextNodeId, IsFusible: false, Evaluated: false})
+								}
+								continue
+							}
+
+							// Controllo se la mappa non è nil
+							if fieldValue.IsNil() {
+								fmt.Printf("Campo AvgFunDurationTime per funzioni '%s' e '%s' è nil.\n", funcName1, funcName2)
+								for _, nextNodeId := range simpleNode.GetNext() {
+									nodeQueue = append(nodeQueue, QueueNode{NodeID: nextNodeId, IsFusible: false, Evaluated: false})
+								}
+								continue
+							}
+
+							// Cerco il valore nella mappa
+							mapValue1 := fieldValue.MapIndex(reflect.ValueOf(funcName1))
+							mapValue2 := fieldValue.MapIndex(reflect.ValueOf(funcName2))
+							if mapValue1.IsValid() && mapValue2.IsValid() {
+								metricValue1 := mapValue1.Float()
+								metricValue2 := mapValue2.Float()
+								fmt.Printf("  Valore di AvgFunDurationTime per '%s': %f\n", funcName1, metricValue1)
+								fmt.Printf("  Valore di AvgFunDurationTime per '%s': %f\n", funcName2, metricValue2)
+
+								// Confronto con la threshold
+								//thresh := calculateDurationThreshold(latestData.returnedInfos.AvgFunDurationTime, policyDef.MaxFuncDuration.threshold)
+								//if metricValue > policyDef.MaxFuncDuration.threshold[0] {
+								estimatedDuration := metricValue1 + metricValue2
+								if estimatedDuration > policyDef.MaxFuncDuration.threshold[0] {
+									fmt.Printf("  Valore %f supera la soglia %f. Imposto canBeFused a false.\n", estimatedDuration, policyDef.MaxFuncDuration.threshold[0])
+									for _, nextNodeId := range simpleNode.GetNext() {
+										nodeQueue = append(nodeQueue, QueueNode{NodeID: nextNodeId, IsFusible: false, Evaluated: false})
+									}
+									continue
+								} else {
+									fmt.Println("Passed Max Est Duration Policy Check")
+								}
+
+							} else {
+								fmt.Printf("  Nessun valore trovato per AvgFunDurationTime delle funzioni '%s' o '%s'.\n", funcName1, funcName2)
+								//se non ho dati dalle metriche, di default non fondo
+								for _, nextNodeId := range simpleNode.GetNext() {
+									nodeQueue = append(nodeQueue, QueueNode{NodeID: nextNodeId, IsFusible: false, Evaluated: false})
+								}
+								continue
+							}
 						}
 
 						mergedFunc, error := CombineFunctions(func1, func2)
