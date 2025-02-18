@@ -156,20 +156,23 @@ func fusionEvaluate(fr *fusionRequest, policyDef policyDefinitionTerms) {
 
 	//genero vettore funzioni del workflow e ne valuto la fusibilità se valore nella policy abilitato
 	if policyDef.BlockSharedFunc.isAct {
-		//se funzione già usata in altri workflows, non fondo
-		otherWorkFunc, error := retrieveWorkflowsFunctions(fr.composition.Name)
-		if error != nil {
-			log.Println(error)
+		//se funzione già usata in threshold altri workflows, non fondo
+		fmt.Println("BlockSharedFunc attivo. Threshold:", policyDef.BlockSharedFunc.threshold[0])
+
+		functionUsageCount, err := retrieveWorkflowsFunctions(fr.composition.Name)
+		if err != nil {
+			log.Println(err)
 			fr.returnChannel <- fusionResult{action: NOOP}
+			return
 		}
 
-		log.Println(otherWorkFunc)
+		fmt.Println(functionUsageCount)
 
 		for key := range fr.composition.Functions {
 			elem := functionElem{name: fr.composition.Functions[key].Name}
-			if contains(otherWorkFunc, fr.composition.Functions[key].Name) {
+			if functionUsageCount[fr.composition.Functions[key].Name] > int(policyDef.BlockSharedFunc.threshold[0]) {
 				elem.canBeFused = false
-				fmt.Printf("Funzione %s già usata in un altro workflow\n", fr.composition.Functions[key].Name)
+				fmt.Printf("Funzione %s già usata in %d altri workflows con threshold %d\n", fr.composition.Functions[key].Name, functionUsageCount[fr.composition.Functions[key].Name], int(policyDef.BlockSharedFunc.threshold[0]))
 			} else {
 				elem.canBeFused = true
 			}
@@ -232,6 +235,8 @@ func fusionEvaluate(fr *fusionRequest, policyDef policyDefinitionTerms) {
 
 			} else {
 				fmt.Printf("  Nessun valore trovato per AvgFunDurationTime della funzione '%s'.\n", funcName)
+				//se non ho dati dalle metriche, di default non fondo
+				functionVector[i].canBeFused = false
 			}
 		}
 	}
@@ -301,6 +306,8 @@ func fusionEvaluate(fr *fusionRequest, policyDef policyDefinitionTerms) {
 				}
 			} else {
 				fmt.Printf("  Valori mancanti per AvgFunDurationTime o AvgFunInitTime per la funzione '%s'.\n", funcName)
+				//se non ho dati diagnostici, non fondo
+				functionVector[i].canBeFused = false
 			}
 		}
 	}
@@ -345,7 +352,8 @@ func contains(slice []string, str string) bool {
 	return false
 }
 
-func retrieveWorkflowsFunctions(currentWorkFlow string) ([]string, error) {
+//da usare solo con threshold ad una
+/*func retrieveWorkflowsFunctions(currentWorkFlow string) ([]string, error) {
 	//saveInfos
 	workflows, error := function.GetAllWithPrefix("/fc")
 	if error != nil {
@@ -378,6 +386,44 @@ func retrieveWorkflowsFunctions(currentWorkFlow string) ([]string, error) {
 	}
 
 	return result, nil
+}*/
+
+func retrieveWorkflowsFunctions(currentWorkFlow string) (map[string]int, error) {
+	workflows, err := function.GetAllWithPrefix("/fc")
+	if err != nil {
+		return nil, fmt.Errorf("Errore nel recupero dei workflow")
+	}
+
+	functionUsageCount := make(map[string]int)
+
+	for _, s := range workflows {
+		/*if s == currentWorkFlow {
+			log.Println("Non analizzare funzioni del workflow corrente")
+			continue
+		}*/
+
+		funComp, ok := fc.GetFC(s)
+		if !ok {
+			return nil, fmt.Errorf("Workflow sconosciuto: '%s'", s)
+		}
+
+		if s == currentWorkFlow {
+			log.Println("Inserisco entry se non presente ma senza aggiungere il count")
+			for _, funcObj := range funComp.Functions {
+				functionUsageCount[funcObj.Name]++
+				functionUsageCount[funcObj.Name]--
+				fmt.Printf("\n[SAME]Func %s used in %s, current count is %d\n", funcObj.Name, funComp.Name, functionUsageCount[funcObj.Name])
+			}
+			continue
+		}
+
+		for _, funcObj := range funComp.Functions {
+			functionUsageCount[funcObj.Name]++
+			fmt.Printf("\nFunc %s used in %s, current count is %d\n", funcObj.Name, funComp.Name, functionUsageCount[funcObj.Name])
+		}
+	}
+
+	return functionUsageCount, nil
 }
 
 func calculateDurationThreshold(vectorInfo map[string]float64, weights []float64) float64 {
