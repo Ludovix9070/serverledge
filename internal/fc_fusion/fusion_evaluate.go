@@ -124,6 +124,7 @@ func FuseFcEvaluate(fcomp *fc.FunctionComposition, policyDef policyDefinitionTer
 
 						if policyDef.MaxCpuDelta.isAct {
 							cpuDelta := math.Abs(func1.CPUDemand - func2.CPUDemand)
+							fmt.Printf("  CpuFun1 cpu demand %f CPUFun2 cpu demand %f. Ora calcolo il delta.\n", func1.CPUDemand, func2.CPUDemand)
 							cpuEstDelta := policyDef.MaxCpuDelta.threshold[0] * MaxFloat64(func1.CPUDemand, func2.CPUDemand)
 							if cpuDelta > cpuEstDelta {
 								fmt.Printf("  CpuDelta %f supera la soglia di CpuDemand %f. Le due funzioni non possono essere fuse.\n", cpuDelta, policyDef.MaxCpuDelta.threshold)

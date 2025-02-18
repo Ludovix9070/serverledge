@@ -101,15 +101,17 @@ func Run(p Policy) {
 					float64(len([]byte(c.ExecReport.Result))),
 					metric.WithAttributes(attribute.String("functNameOutputSize", c.Fun.Name)))
 
-				metr, err := telemetry.NewHistogramMetric(meter, "Function.initTime", "Init time of a function")
-				if err != nil {
-					panic(err)
+				//mi prendo l'init time solo in caso di cold start
+				if !c.ExecReport.IsWarmStart {
+					metr, err := telemetry.NewHistogramMetric(meter, "Function.initTime", "Init time of a function")
+					if err != nil {
+						panic(err)
+					}
+					metr.Record(
+						c.scheduledRequest.Ctx,
+						c.ExecReport.InitTime,
+						metric.WithAttributes(attribute.String("functNameInitTime", c.Fun.Name)))
 				}
-				metr.Record(
-					c.scheduledRequest.Ctx,
-					c.ExecReport.InitTime,
-					metric.WithAttributes(attribute.String("functNameInitTime", c.Fun.Name)))
-
 			}
 		}
 	}

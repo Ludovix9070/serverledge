@@ -466,7 +466,8 @@ func CanFuseChoiceNode(node *fc.SimpleNode, dag *fc.Dag, choiceNode *fc.ChoiceNo
 
 	// Verifica che il nodo non sia referenziato da altri nodi generici nel DAG
 	for _, otherNode := range dag.Nodes {
-		if otherNode == choiceNode {
+		_, ok := otherNode.(*fc.ChoiceNode)
+		if otherNode == choiceNode || ok {
 			continue
 		}
 		if hasNext, ok := otherNode.(fc.HasNext); ok {
@@ -537,6 +538,10 @@ func CountNodeReferences(nodeId fc.DagNodeId, dag *fc.Dag) int {
 	count := 0
 
 	for _, otherNode := range dag.Nodes {
+		_, ok := otherNode.(*fc.ChoiceNode)
+		if ok {
+			continue
+		}
 		// Verifica se il nodo è presente nella lista 'Next' di un nodo che implementa 'HasNext'
 		if hasNext, ok := otherNode.(fc.HasNext); ok {
 			for _, next := range hasNext.GetNext() {
@@ -636,12 +641,20 @@ func containsPython(s string) bool {
 // ONLY FOR DEBUG
 func PrintDag(dag *fc.Dag) {
 	fmt.Println("DAG State:")
+
 	for id, node := range dag.Nodes {
 		fmt.Printf("Node ID: %s, Type: %T\n", id, node)
+
+		// Se il nodo è un SimpleNode, stampiamo funzione e output
 		if simpleNode, ok := node.(*fc.SimpleNode); ok {
 			fmt.Printf("  Func: %s, OutputTo: %v\n", simpleNode.Func, simpleNode.OutputTo)
 		}
-		if hasNext, ok := node.(fc.HasNext); ok {
+
+		// Se è un ChoiceNode, stampiamo le alternative invece di chiamare GetNext()
+		if choiceNode, ok := node.(*fc.ChoiceNode); ok {
+			fmt.Printf("  Choices: %v\n", choiceNode.Alternatives)
+		} else if hasNext, ok := node.(fc.HasNext); ok {
+			// Per gli altri nodi, stampiamo normalmente Next
 			fmt.Printf("  Next: %v\n", hasNext.GetNext())
 		}
 	}
@@ -683,6 +696,7 @@ func PrintDagSimpleJSON(c echo.Context, dag *fc.Dag) error {
 	return c.JSON(http.StatusOK, jsonOutput)
 }
 
+/*
 func PrintDagOrderedJSON(c echo.Context, dag *fc.Dag) error {
 	type NodeJSON struct {
 		NodeID   string   `json:"node_id"`
@@ -748,6 +762,103 @@ func PrintDagOrderedJSON(c echo.Context, dag *fc.Dag) error {
 		}
 
 		if hasNext, ok := node.(fc.HasNext); ok {
+			for _, nextID := range hasNext.GetNext() {
+				nodeJSON.Next = append(nodeJSON.Next, string(nextID))
+			}
+		}
+
+		jsonOutput = append(jsonOutput, nodeJSON)
+	}
+
+	return c.JSON(http.StatusOK, jsonOutput)
+}*/
+
+// PrintDagOrderedJSON stampa il DAG in ordine topologico come JSON
+func PrintDagOrderedJSON(c echo.Context, dag *fc.Dag) error {
+	type NodeJSON struct {
+		NodeID   string   `json:"node_id"`
+		NodeType string   `json:"node_type"`
+		Func     string   `json:"func,omitempty"`
+		OutputTo []string `json:"output_to,omitempty"`
+		Next     []string `json:"next,omitempty"`
+		Choices  []string `json:"choices,omitempty"` // Aggiunto per i ChoiceNode
+	}
+
+	// Mappa per tracciare le dipendenze
+	adjacencyMap := make(map[string][]string)
+	inDegree := make(map[string]int)
+
+	// Costruisce la mappa di adiacenza
+	for id, node := range dag.Nodes {
+		strID := string(id)
+		adjacencyMap[strID] = []string{}
+
+		// Se il nodo ha un "next", gestiamolo
+		if hasNext, ok := node.(fc.HasNext); ok {
+			if choiceNode, ok := node.(*fc.ChoiceNode); ok {
+				// Se è un ChoiceNode, prendiamo le alternative invece di GetNext()
+				for _, alt := range choiceNode.Alternatives {
+					adjacencyMap[strID] = append(adjacencyMap[strID], string(alt))
+					inDegree[string(alt)]++
+				}
+			} else {
+				// Per tutti gli altri nodi normali, usiamo GetNext()
+				for _, nextID := range hasNext.GetNext() {
+					adjacencyMap[strID] = append(adjacencyMap[strID], string(nextID))
+					inDegree[string(nextID)]++
+				}
+			}
+		}
+	}
+
+	// Trova i nodi senza dipendenze iniziali
+	var order []string
+	queue := []string{}
+
+	for id := range dag.Nodes {
+		if inDegree[string(id)] == 0 {
+			queue = append(queue, string(id))
+		}
+	}
+
+	// Ordinamento topologico con BFS (Kahn's Algorithm)
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+		order = append(order, current)
+
+		for _, neighbor := range adjacencyMap[current] {
+			inDegree[neighbor]--
+			if inDegree[neighbor] == 0 {
+				queue = append(queue, neighbor)
+			}
+		}
+	}
+
+	// Creazione dell'output JSON ordinato
+	var jsonOutput []NodeJSON
+	for _, id := range order {
+		nodeID := fc.DagNodeId(id)
+		node := dag.Nodes[nodeID]
+
+		nodeJSON := NodeJSON{
+			NodeID:   id,
+			NodeType: fmt.Sprintf("%T", node),
+		}
+
+		// Se è un SimpleNode, aggiungiamo la funzione e l'output
+		if simpleNode, ok := node.(*fc.SimpleNode); ok {
+			nodeJSON.Func = simpleNode.Func
+			nodeJSON.OutputTo = []string{string(simpleNode.OutputTo)}
+		}
+
+		// Se è un ChoiceNode, aggiungiamo le alternative
+		if choiceNode, ok := node.(*fc.ChoiceNode); ok {
+			for _, alt := range choiceNode.Alternatives {
+				nodeJSON.Choices = append(nodeJSON.Choices, string(alt))
+			}
+		} else if hasNext, ok := node.(fc.HasNext); ok {
+			// Per gli altri nodi, usiamo GetNext()
 			for _, nextID := range hasNext.GetNext() {
 				nodeJSON.Next = append(nodeJSON.Next, string(nextID))
 			}

@@ -307,10 +307,11 @@ func InvokeFunctionComposition(e echo.Context) error {
 		})
 
 		return e.JSON(http.StatusOK, fc.CompositionResponse{
-			Success:      true,
-			Result:       fcReq.ExecReport.Result,
-			Reports:      reports,
-			ResponseTime: fcReq.ExecReport.ResponseTime,
+			Success:           true,
+			Result:            fcReq.ExecReport.Result,
+			Reports:           reports,
+			ResponseTime:      fcReq.ExecReport.ResponseTime,
+			AvailableMemoryMB: node.Resources.AvailableMemMB,
 		})
 	}
 }
