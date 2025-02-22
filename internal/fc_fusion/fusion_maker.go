@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"go/importer"
 	"io"
 	"os"
 	"regexp"
@@ -652,7 +653,13 @@ func updatePythonImports(originalCode, prefix string) (string, error) {
 
 	return updatedCode, nil
 }*/
-//forse meglio per import relativi, da testare
+
+func isStandardLibrary(module string) bool {
+	_, err := importer.Default().Import(module)
+	return err == nil
+}
+
+// forse meglio per import relativi, da testare
 func updatePythonImports(originalCode, prefix string) (string, error) {
 	importPattern := `(?m)^(from\s+|import\s+)([a-zA-Z_][a-zA-Z0-9_]*)(.*)?$`
 	re := regexp.MustCompile(importPattern)
@@ -662,6 +669,12 @@ func updatePythonImports(originalCode, prefix string) (string, error) {
 		if len(parts) < 2 {
 			return match
 		}
+
+		module := parts[1]
+		if isStandardLibrary(module) {
+			return match // Non modificare se è una libreria standard o di terze parti
+		}
+
 		if strings.HasPrefix(match, "from") {
 			return fmt.Sprintf("from .%s%s", parts[1], strings.Join(parts[2:], " "))
 		} else if strings.HasPrefix(match, "import") {

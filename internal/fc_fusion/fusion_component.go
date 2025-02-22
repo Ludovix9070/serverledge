@@ -5,14 +5,11 @@ import (
 	"log"
 	"math"
 	"reflect"
-	"runtime"
 	"sort"
 	"time"
 
-	"github.com/grussorusso/serverledge/internal/config"
 	"github.com/grussorusso/serverledge/internal/fc"
 	"github.com/grussorusso/serverledge/internal/function"
-	"github.com/grussorusso/serverledge/internal/node"
 )
 
 var metricInfos chan *returnedOutputData
@@ -28,11 +25,11 @@ func Run(p FusionPolicy) {
 
 	// initialize Resources
 	//forse info saranno utili nel corso della vita del componente di fusione
-	availableCores := runtime.NumCPU()
-	node.Resources.AvailableMemMB = int64(config.GetInt(config.POOL_MEMORY_MB, 1024))
-	node.Resources.AvailableCPUs = config.GetFloat(config.POOL_CPUS, float64(availableCores))
-	node.Resources.ContainerPools = make(map[string]*node.ContainerPool)
-	log.Printf("Current resources for fusion: %v\n", &node.Resources)
+	//availableCores := runtime.NumCPU()
+	//node.Resources.AvailableMemMB = int64(config.GetInt(config.POOL_MEMORY_MB, 1024))
+	//node.Resources.AvailableCPUs = config.GetFloat(config.POOL_CPUS, float64(availableCores))
+	//node.Resources.ContainerPools = make(map[string]*node.ContainerPool)
+	//log.Printf("Current resources for fusion: %v\n", &node.Resources)
 
 	// initialize fusion policy
 	p.Init()
