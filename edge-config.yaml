@@ -5,12 +5,15 @@
 //offloading: true
 scheduler.policy: default
 //fc_scheduler.policy: edgecloud
-//container.pool.memory: 3072
+container.pool.memory: 4096
 //container.pool.cpus: 1
 //scheduler.queue.capacity: 0
  
 tracing.enabled: false
 metrics.enabled: true
-fusion.policy: alwaysfuse
+fusion.policy: resourceaware
+#fusion.policy: initaware
+#fusion.policy: constrained
+#fusion.policy: fuseall
 #fusion.policy: evaluate
 #tracing.outfile: ./tracing/tracing.json

@@ -118,10 +118,16 @@ func CreateFusionPolicy() fc_fusion.FusionPolicy {
 	policyConf := config.GetString(config.FUSION_POLICY, "default")
 	log.Printf("Configured policy: %s\n", policyConf)
 
-	if policyConf == "alwaysfuse" {
+	if policyConf == "fuseall" {
 		return &fc_fusion.DefaultFusionPolicy{}
 	} else if policyConf == "evaluate" {
 		return &fc_fusion.EvaluateFusionPolicy{}
+	} else if policyConf == "constrained" {
+		return &fc_fusion.ConstrainedFusionPolicy{}
+	} else if policyConf == "initaware" {
+		return &fc_fusion.InitAwareFusionPolicy{}
+	} else if policyConf == "resourceaware" {
+		return &fc_fusion.ResourceAwareFusionPolicy{}
 	}
 
 	//per ora ho solo la default policy

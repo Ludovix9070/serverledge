@@ -102,27 +102,27 @@
         "Comment": "Lang=Python",
         "Type": "Task",
         "Resource": "greatestPrime",
-        "Next": "NextIncSecondState2"
-      },
-
-      "NextIncSecondState2": {
-        "Comment": "Lang=Python",
-        "Type": "Task",
-        "Resource": "incSecond",
         "Next": "NextMatrixState2"
       },
- 
+
       "NextMatrixState2": {
         "Comment": "Lang=Python",
         "Type": "Task",
-        "Resource": "smoothSumMatrix",
+        "Resource": "sleep",
         "Next": "NextMatrixState3"
       },
  
       "NextMatrixState3": {
         "Comment": "Lang=Python",
         "Type": "Task",
-        "Resource": "sleep",
+        "Resource": "smoothSumMatrix",
+        "Next": "NextIncSecondState2"
+      },
+ 
+      "NextIncSecondState2": {
+        "Comment": "Lang=Python",
+        "Type": "Task",
+        "Resource": "incSecond",
         "Next": "NextPrimeState3"
       },
 
