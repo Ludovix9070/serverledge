@@ -1,0 +1,143 @@
+{
+    "Comment": "An example of the Amazon States Language using a choice state.",
+    "StartAt": "ChoiceState",
+    "States": {
+      "ChoiceState": {
+        "Type": "Choice",
+        "Choices": [
+            {
+                "And": [
+                    {
+                        "Variable": "$.input",
+                        "IsPresent": true
+                    },
+                    {
+                        "Variable": "$.input",
+                        "IsNumeric": true
+                    },
+                    {
+                        "Variable": "$.input",
+                        "NumericLessThan": 8
+                    }
+                ],
+                "Next": "FirstMatchState"
+            }
+        ],
+        "Default": "DefaultState"
+      },
+  
+      "FirstMatchState": {
+        "Comment": "Lang=Python",
+        "Type": "Task",
+        "Resource": "sumMatrix",
+        "Next": "IncSecondState"
+      },
+
+      "IncSecondState": {
+        "Comment": "Lang=Python",
+        "Type": "Task",
+        "Resource": "incSecond",
+        "Next": "ChoiceState2"
+      },
+ 
+      "ChoiceState2": {
+        "Type": "Choice",
+        "Choices": [
+            {
+                "And": [
+                    {
+                        "Variable": "$.input",
+                        "IsPresent": true
+                    },
+                    {
+                        "Variable": "$.input",
+                        "NumericLessThan": 43
+                    }
+                ],
+                "Next": "NextPrimeState"
+            }
+        ],
+        "Default": "SucceedState"
+      },
+ 
+      "DefaultState": {
+        "Type": "Fail",
+        "Error": "DefaultStateError",
+        "Cause": "Too Large Number!"
+      },
+  
+      "SucceedState": {
+        "Type": "Succeed"
+      },
+ 
+      "NextPrimeState": {
+        "Comment": "Lang=Python",
+        "Type": "Task",
+        "Resource": "greatestPrime",
+        "Next": "NextIncSecondState"
+      },
+
+      "NextIncSecondState": {
+        "Comment": "Lang=Python",
+        "Type": "Task",
+        "Resource": "incThird",
+        "Next": "NextIncNormalState"
+      },
+
+      "NextIncNormalState": {
+        "Comment": "Lang=Python",
+        "Type": "Task",
+        "Resource": "inc",
+        "Next": "NextMatrixState"
+      },
+ 
+      "NextMatrixState": {
+        "Comment": "Lang=Python",
+        "Type": "Task",
+        "Resource": "sumMatrixSecond",
+        "Next": "NextPrimeState2"
+      },
+ 
+      "NextPrimeState2": {
+        "Comment": "Lang=Python",
+        "Type": "Task",
+        "Resource": "greatestPrimeSecond",
+        "Next": "NextMatrixState2"
+      },
+
+      "NextMatrixState2": {
+        "Comment": "Lang=Python",
+        "Type": "Task",
+        "Resource": "sleep",
+        "Next": "NextMatrixState3"
+      },
+ 
+      "NextMatrixState3": {
+        "Comment": "Lang=Python",
+        "Type": "Task",
+        "Resource": "smoothSumMatrix",
+        "Next": "NextIncSecondState2"
+      },
+ 
+      "NextIncSecondState2": {
+        "Comment": "Lang=Python",
+        "Type": "Task",
+        "Resource": "incFourth",
+        "Next": "NextPrimeState3"
+      },
+
+      "NextPrimeState3": {
+        "Comment": "Lang=Python",
+        "Type": "Task",
+        "Resource": "greatestPrimeThird",
+        "Next": "NextIncSecondState3"
+      },
+ 
+      "NextIncSecondState3": {
+        "Comment": "Lang=Python",
+        "Type": "Task",
+        "Resource": "incFifth",
+        "End": true
+      }
+    }
+  }
